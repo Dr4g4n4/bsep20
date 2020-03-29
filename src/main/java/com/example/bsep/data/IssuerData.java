@@ -1,8 +1,8 @@
 package com.example.bsep.data;
 
-import sun.security.x509.X500Name;
-
 import java.security.PrivateKey;
+
+import org.bouncycastle.asn1.x500.X500Name;
 
 public class IssuerData {
 
