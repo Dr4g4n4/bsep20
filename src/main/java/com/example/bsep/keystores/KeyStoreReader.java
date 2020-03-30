@@ -3,6 +3,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -12,10 +13,12 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Enumeration;
 
 import com.example.bsep.data.IssuerData;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.springframework.util.ResourceUtils;
 
 public class KeyStoreReader {
     //KeyStore je Java klasa za citanje specijalizovanih datoteka koje se koriste za cuvanje kljuceva
@@ -47,7 +50,7 @@ public class KeyStoreReader {
     public IssuerData readIssuerFromStore(String keyStoreFile, String alias, char[] password, char[] keyPass) {
         try {
             //Datoteka se ucitava
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(ResourceUtils.getFile("classpath:"+keyStoreFile)));
             keyStore.load(in, password);
             //Iscitava se sertifikat koji ima dati alias
             Certificate cert = keyStore.getCertificate(alias);
@@ -80,7 +83,7 @@ public class KeyStoreReader {
             //kreiramo instancu KeyStore
             KeyStore ks = KeyStore.getInstance("JKS", "SUN");
             //ucitavamo podatke
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(Paths.get(ResourceUtils.getFile("classpath:")+"\\..\\..\\src\\main\\resources").toRealPath().toString() + "\\" + keyStoreFile));
             ks.load(in, keyStorePass.toCharArray());
 
             if(ks.isKeyEntry(alias)) {
@@ -103,6 +106,15 @@ public class KeyStoreReader {
         return null;
     }
 
+    public Enumeration<String> aliases(){
+        try {
+            keyStore.aliases();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * Ucitava privatni kljuc is KS fajla
      */
@@ -111,7 +123,7 @@ public class KeyStoreReader {
             //kreiramo instancu KeyStore
             KeyStore ks = KeyStore.getInstance("JKS", "SUN");
             //ucitavamo podatke
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(ResourceUtils.getFile("classpath:"+keyStoreFile)));
             ks.load(in, keyStorePass.toCharArray());
 
             if(ks.isKeyEntry(alias)) {
