@@ -52,6 +52,7 @@ public class CertificateService {
         List<Certificate> all = certificateRepository.findAllByCa(true);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
+            if(!c.isRevoked())
             retValue.add(new CertificateDTO(c));
         }
         return retValue;
@@ -61,6 +62,7 @@ public class CertificateService {
         List<Certificate> all = certificateRepository.findAllByCa(false);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
+            if(!c.isRevoked())
             retValue.add(new CertificateDTO(c));
         }
         return retValue;
