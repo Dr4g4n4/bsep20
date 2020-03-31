@@ -13,13 +13,9 @@ public interface CertificateRepository extends JpaRepository<Certificate, Long> 
 
     List<Certificate> findAll();
 
-    List<Certificate> findAllByNonCa();
+    List<Certificate> findAllByCa(boolean ca);
 
-    List<Certificate> findAllByCa();
-
-    List<Certificate>findAllByRevoked();
-
-    List<Certificate>findAllByNonRevoked();
+    List<Certificate>findAllByRevoked(boolean re);
 
     @SuppressWarnings("unchecked")
     Certificate save(Certificate certificate);

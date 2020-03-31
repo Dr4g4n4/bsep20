@@ -1,5 +1,6 @@
 package com.example.bsep.keystores;
 
+import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
 import java.io.FileInputStream;
@@ -15,6 +16,7 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 
+@Component
 public class KeyStoreWriter {
 
     //KeyStore je Java klasa za citanje specijalizovanih datoteka koje se koriste za cuvanje kljuceva
@@ -23,18 +25,6 @@ public class KeyStoreWriter {
     // - Privatni kljucevi
     // - Tajni kljucevi, koji se koriste u simetricnima siframa
     private KeyStore keyStore;
-
-    public String aliases(){
-        return null;
-    }
-
-    public KeyStore getKeyStore() {
-        return keyStore;
-    }
-
-    public void setKeyStore(KeyStore keyStore) {
-        this.keyStore = keyStore;
-    }
 
     public KeyStoreWriter(KeyStore keyStore) {
         super();
@@ -82,30 +72,6 @@ public class KeyStoreWriter {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void saveNewKeyStore(String fileName, char[] password) {
-        try {
-            keyStore.store(new FileOutputStream(Paths.get(ResourceUtils.getFile("classpath:")+"\\..\\..\\src\\main\\resources").toRealPath().toString()+"\\"+fileName), password);
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeCertificate(String alias, Certificate certificate) {
-        try {
-            keyStore.setCertificateEntry(alias, certificate);
-        } catch (KeyStoreException e) {
             e.printStackTrace();
         }
     }

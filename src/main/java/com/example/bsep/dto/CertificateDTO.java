@@ -14,6 +14,10 @@ public class CertificateDTO {
     private Long idIssuer;
     private String purpose;
     private String city;
+    private String name;
+    private String surname;
+    private String email;
+    private String uid;
 
     public CertificateDTO(){
 
@@ -27,6 +31,10 @@ public class CertificateDTO {
         this.idIssuer = certificate.getIdIssuer();
         this.purpose = certificate.getPurpose();
         this.city = certificate.getPurpose();
+        this.name = name;
+        this.surname = surname;
+        this.email = email;
+        this.uid = uid;
     }
 
     public Long getIdSubject(){
@@ -91,6 +99,30 @@ public class CertificateDTO {
 
     public void setCity(String city){
         this.city = city;
+    }
+
+    public String getName(){  return this.name; }
+
+    public void setName(String name){
+        this.name = name;
+    }
+
+    public String getSurname(){  return this.surname; }
+
+    public void setSurname(String surname){
+        this.surname = surname;
+    }
+
+    public String getEmail(){  return this.email; }
+
+    public void setEmail(String email){
+        this.email = email;
+    }
+
+    public String getUid(){  return this.uid; }
+
+    public void setUid(String uid){
+        this.uid = uid;
     }
 
 }

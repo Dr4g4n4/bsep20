@@ -18,8 +18,10 @@ import java.util.Enumeration;
 import com.example.bsep.data.IssuerData;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
+@Component
 public class KeyStoreReader {
     //KeyStore je Java klasa za citanje specijalizovanih datoteka koje se koriste za cuvanje kljuceva
     //Tri tipa entiteta koji se obicno nalaze u ovakvim datotekama su:
@@ -106,14 +108,6 @@ public class KeyStoreReader {
         return null;
     }
 
-    public Enumeration<String> aliases(){
-        try {
-            keyStore.aliases();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     /**
      * Ucitava privatni kljuc is KS fajla

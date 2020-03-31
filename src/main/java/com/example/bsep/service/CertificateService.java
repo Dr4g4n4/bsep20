@@ -19,16 +19,11 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.security.KeyPair;
-
+@Service
 public class CertificateService {
 
     @Autowired
@@ -54,7 +49,7 @@ public class CertificateService {
     }
 
     public List<CertificateDTO> getAllCaCertificates(){
-        List<Certificate> all = certificateRepository.findAllByCa();
+        List<Certificate> all = certificateRepository.findAllByCa(true);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
             retValue.add(new CertificateDTO(c));
@@ -63,7 +58,7 @@ public class CertificateService {
     }
 
     public List<CertificateDTO> getAllNoCaCertificates(){
-        List<Certificate> all = certificateRepository.findAllByNonCa();
+        List<Certificate> all = certificateRepository.findAllByCa(false);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
             retValue.add(new CertificateDTO(c));
@@ -72,7 +67,7 @@ public class CertificateService {
     }
 
     public List<CertificateDTO> getAllRevokedCertificates(){
-        List<Certificate> all = certificateRepository.findAllByRevoked();
+        List<Certificate> all = certificateRepository.findAllByRevoked(true);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
             retValue.add(new CertificateDTO(c));
@@ -81,7 +76,7 @@ public class CertificateService {
     }
 
     public List<CertificateDTO> getAllNoRevokedCertificates(){
-        List<Certificate> all = certificateRepository.findAllByNonRevoked();
+        List<Certificate> all = certificateRepository.findAllByRevoked(false);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
             retValue.add(new CertificateDTO(c));
@@ -89,11 +84,54 @@ public class CertificateService {
         return retValue;
     }
 
-    public void createCertificate(Certificate certificate, Long idIssuer){
+    public void createSelfSignedCertificate(Certificate certificate){
+        Certificate cert = certificateRepository.save(certificate);
+        KeyPair selfKey = getKeyPair();
+        SubjectData subjectData = getSubjectData(cert,selfKey.getPublic());
+
+        // preuzmem podatke iz sertifikata
+        X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
+        builder.addRDN(BCStyle.CN, certificate.getName() + " " + certificate.getSurname());
+        builder.addRDN(BCStyle.SURNAME, certificate.getName());
+        builder.addRDN(BCStyle.GIVENNAME, certificate.getSurname());
+        builder.addRDN(BCStyle.L , certificate.getCity());
+        builder.addRDN(BCStyle.E, certificate.getEmail());
+        builder.addRDN(BCStyle.UID, certificate.getUid());
+        IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
+
+        CertificateGenerator certGenerator = new CertificateGenerator();
+        X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
+        String keyStoreFile = "ks/"+certificate.getCity()+".jks";
+
+        // generisanje keyStore
+        KeyStoreWriter keyStoreW = new KeyStoreWriter();
+        keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
+        keyStoreW.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "admin123".toCharArray(), certX509);
+        keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
+
+        keyStoreW = new KeyStoreWriter();
+        keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
+        keyStoreW.saveKeyStore("ks/"+certificate.getCity()+"Store.jks", "sifra1".toCharArray());
+
+        if(certificate.isCa()) {
+            keyStoreFile = "ks/ksCA.jks";
+        }
+        else {
+            keyStoreFile = "ks/nonCA_KS.jks";
+        }
+
+        KeyStoreWriter kw = new KeyStoreWriter();
+
+        kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
+        kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
+        kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
+    }
+
+    public void createNonSelfSignedCertificate(Certificate certificate){
         Certificate newCertificate = certificateRepository.save(certificate);
 
-        certificate.setIdIssuer(idIssuer);
-        IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", Long.toString(idIssuer), "sifra1".toCharArray(), "sifra1".toCharArray());
+        // ucitava se privatni kljuc sertifikata koji izdaje drugi sertifikat
+        IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", Long.toString(certificate.getIdIssuer()), "sifra1".toCharArray(), "sifra1".toCharArray());
         KeyPair subjectKey = getKeyPair();
         SubjectData subjectData = getSubjectData(newCertificate,subjectKey.getPublic());
         CertificateGenerator certGenerator = new CertificateGenerator();
@@ -104,14 +142,14 @@ public class CertificateService {
         KeyStoreWriter keyStoreW = new KeyStoreWriter();
         keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
         keyStoreW.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), "admin123".toCharArray(), certX509);
-        keyStoreW.saveNewKeyStore(keyStoreFile, "sifra1".toCharArray());
+        keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
 
         keyStoreW = new KeyStoreWriter();
         keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
-        keyStoreW.saveNewKeyStore("ks/"+certificate.getCity()+"Store.jks", "sifra1".toCharArray());
+        keyStoreW.saveKeyStore("ks/"+certificate.getCity()+"Store.jks", "sifra1".toCharArray());
 
         if(certificate.isCa()) {
-            keyStoreFile = "ks/KSca.jks";
+            keyStoreFile = "ks/ksCA.jks";
         }
         else {
             keyStoreFile = "ks/nonCA_KS.jks";
@@ -133,12 +171,12 @@ public class CertificateService {
 
         // podaci vlasnika
         X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
-        builder.addRDN(BCStyle.CN, "Pero Peric");
-        builder.addRDN(BCStyle.SURNAME, "Pero");
-        builder.addRDN(BCStyle.GIVENNAME, "Peric");
+        builder.addRDN(BCStyle.CN, certificate.getName() + " " + certificate.getSurname());
+        builder.addRDN(BCStyle.SURNAME, certificate.getName());
+        builder.addRDN(BCStyle.GIVENNAME, certificate.getSurname());
         builder.addRDN(BCStyle.L , certificate.getCity());
-        builder.addRDN(BCStyle.E, "peroperic@uns.ac.rs");
-        builder.addRDN(BCStyle.UID, "1234");
+        builder.addRDN(BCStyle.E, certificate.getEmail());
+        builder.addRDN(BCStyle.UID, certificate.getUid());
 
         return new SubjectData(pk, builder.build(), serialNumber, startDate, endDate);
     }

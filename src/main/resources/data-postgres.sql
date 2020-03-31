@@ -1,1 +1,6 @@
---INSERT INTO AUTHORITY
+INSERT INTO admin (userN, password) VALUES ('admin', 'admin');
+INSERT INTO certificate (id_subject, start_date, end_date, ca, revoked, id_issuer, purpose, city, name, surname, email, uid ) VALUES (0, '2019-12-15', '2022-12-15', true, false, 111, 'Potpisivanje sertifikata', 'Foca', 'Dragana', 'Mihajlovic', 'draganamihajlovic55@yahoo.com', '16091997');
+INSERT INTO certificate (id_subject, start_date, end_date, ca, revoked, id_issuer, purpose, city, name, surname, email, uid ) VALUES (1, '2019-08-15', '2029-08-15', true, false, 111, 'Digitalni potpis', 'Orahovo', 'Smile', 'Fox', 'smilefox@gmail.com', '1997');
+
+INSERT INTO certificate (id_subject, start_date, end_date, ca, revoked, id_issuer, purpose, city, name, surname, email, uid ) VALUES (2, '2019-12-15', '2022-12-15', false, false, 111, 'Potpisivanje sertifikata', 'Foca', 'Dragana', 'Mihajlovic', 'gaga@yahoo.com', '16091997');
+INSERT INTO certificate (id_subject, start_date, end_date, ca, revoked, id_issuer, purpose, city, name, surname, email, uid ) VALUES (3, '2019-08-15', '2029-08-15', false, false, 111, 'Digitalni potpis', 'Orahovo', 'Smile', 'Fox', 'gagic@gmail.com', '1997');
