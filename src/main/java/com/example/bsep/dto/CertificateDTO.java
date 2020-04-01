@@ -6,12 +6,12 @@ import java.util.Date;
 
 public class CertificateDTO {
 
-    private String serialNumber;
+    private String serialNumberSubject;
+    private String serialNumberIssuer;
     private Date startDate;
     private Date endDate;
     private boolean ca;
     private boolean revoked;
-    private Long idIssuer;
     private String purpose;
     private String city;
     private String name;
@@ -25,12 +25,12 @@ public class CertificateDTO {
     }
 
     public CertificateDTO(Certificate certificate){
-        this.serialNumber = certificate.getSerialNumber();
+        this.serialNumberSubject = certificate.getSerialNumberSubject();
+        this.serialNumberIssuer = certificate.getSerialNumberIssuer();
         this.startDate = certificate.getStartDate();
         this.endDate = certificate.getEndDate();
         this.ca = certificate.isCa();
         this.revoked = certificate.isRevoked();
-        this.idIssuer = certificate.getIdIssuer();
         this.purpose = certificate.getPurpose();
         this.city = certificate.getPurpose();
         this.name = certificate.getName();
@@ -40,12 +40,12 @@ public class CertificateDTO {
         this.extension = certificate.getExtension();
     }
 
-    public String getSerialNumber(){
-        return this.serialNumber;
+    public String getSerialNumbeSubejctr(){
+        return this.serialNumberSubject;
     }
 
-    public void setSerialNumber(String serialNumber){
-        this.serialNumber = serialNumber;
+    public void setSerialNumberSubject(String serialNumberSubject){
+        this.serialNumberSubject = serialNumberSubject;
     }
 
     public Date getStartDate(){
@@ -80,12 +80,12 @@ public class CertificateDTO {
         this.ca = revoked;
     }
 
-    public Long getIdIssuer(){
-        return this.idIssuer;
+    public String getSerialNumberIssuerr(){
+        return this.serialNumberIssuer;
     }
 
-    public void setIdIssuer(Long idIssuer){
-        this.idIssuer = idIssuer;
+    public void setSerialNumberIssuer(String serialNumberIssuer){
+        this.serialNumberIssuer = serialNumberIssuer;
     }
 
     public String getPurpose(){

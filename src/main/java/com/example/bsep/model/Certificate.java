@@ -10,10 +10,15 @@ public class Certificate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idSubject;
+    private Long id;
 
-    @Column(name = "serialNumber", nullable = false)
-    private String serialNumber;
+    // kome
+    @Column(name = "serialNumberSubject", nullable = false, unique = true)
+    private String serialNumberSubject;
+
+    // ko
+    @Column(name = "serialNumberIssuer", nullable = false, unique = true)
+    private String serialNumberIssuer;
 
     @Column(name = "startDate", nullable = false)
     private Date startDate;
@@ -26,9 +31,6 @@ public class Certificate {
 
     @Column(name = "revoked", nullable = false)
     private boolean revoked;
-
-    @Column(name = "idIssuer", nullable = false)
-    private Long idIssuer;
 
     @Column(name = "purpose", nullable = false)
     private String purpose;
@@ -55,14 +57,14 @@ public class Certificate {
 
     }
 
-    public Certificate(Date startDate, String serialNumber ,Date endDate, boolean isCA, boolean isRevoked, Long idIssuer, String purpose, String city, String name, String surname, String email, String uid, String extension){
+    public Certificate(Date startDate, String serialNumberSubject, String serialNumberIssuer, Date endDate, boolean isCA, boolean isRevoked,  String purpose, String city, String name, String surname, String email, String uid, String extension){
         super();
-        this.serialNumber = serialNumber;
+        this.serialNumberSubject = serialNumberSubject;
+        this.serialNumberIssuer = serialNumberIssuer;
         this.startDate = startDate;
         this.endDate = endDate;
         this.ca = isCA;
         this.revoked = false;
-        this.idIssuer = idIssuer;
         this.purpose = purpose;
         this.city = city;
         this.name = name;
@@ -72,12 +74,12 @@ public class Certificate {
         this.extension = extension;
     }
 
-    public Long getIdSubject(){
-        return this.idSubject;
+    public String getSerialNumberSubject(){
+        return this.serialNumberSubject;
     }
 
-    public void setIdSubject(Long idSubject){
-        this.idSubject = idSubject;
+    public void setSerialNumberSubject(String serialNumberSubject){
+        this.serialNumberSubject = serialNumberSubject;
     }
 
     public Date getStartDate(){
@@ -112,12 +114,12 @@ public class Certificate {
         this.ca = revoked;
     }
 
-    public Long getIdIssuer(){
-        return this.idIssuer;
+    public String getSerialNumberIssuer(){
+        return this.serialNumberIssuer;
     }
 
-    public void setIdIssuer(Long idIssuer){
-        this.idIssuer = idIssuer;
+    public void setSerialNumberIssuer(String serialNumberIssuer){
+        this.serialNumberIssuer = serialNumberIssuer;
     }
 
     public String getPurpose(){
@@ -126,14 +128,6 @@ public class Certificate {
 
     public void setPurpose(String purpose){
         this.purpose = purpose;
-    }
-
-    public String getSerialNumber(){
-        return this.serialNumber;
-    }
-
-    public void setSerialNumber(String serialNumber){
-        this.serialNumber = serialNumber;
     }
 
     public String getCity(){  return this.city; }
