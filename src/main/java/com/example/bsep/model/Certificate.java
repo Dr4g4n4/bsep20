@@ -2,19 +2,18 @@ package com.example.bsep.model;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Date;
 
 @Entity
 public class Certificate {
 
     @Id
-    @GeneratedValue(generator="increment")
-    @GenericGenerator(name="idSubject", strategy = "increment")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idSubject;
+
+    @Column(name = "serialNumber", nullable = false)
+    private String serialNumber;
 
     @Column(name = "startDate", nullable = false)
     private Date startDate;
@@ -49,12 +48,16 @@ public class Certificate {
     @Column(name = "uid", nullable = false)
     private String uid;
 
+    @Column(name = "extension", nullable = false)
+    private String extension;
+
     public Certificate(){
 
     }
 
-    public Certificate(Date startDate, Date endDate, boolean isCA, boolean isRevoked, Long idIssuer, String purpose, String city, String name, String surname, String email, String uid){
+    public Certificate(Date startDate, String serialNumber ,Date endDate, boolean isCA, boolean isRevoked, Long idIssuer, String purpose, String city, String name, String surname, String email, String uid, String extension){
         super();
+        this.serialNumber = serialNumber;
         this.startDate = startDate;
         this.endDate = endDate;
         this.ca = isCA;
@@ -66,6 +69,7 @@ public class Certificate {
         this.surname = surname;
         this.email = email;
         this.uid = uid;
+        this.extension = extension;
     }
 
     public Long getIdSubject(){
@@ -124,6 +128,14 @@ public class Certificate {
         this.purpose = purpose;
     }
 
+    public String getSerialNumber(){
+        return this.serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber){
+        this.serialNumber = serialNumber;
+    }
+
     public String getCity(){  return this.city; }
 
     public void setCity(String city){
@@ -152,5 +164,13 @@ public class Certificate {
 
     public void setUid(String uid){
         this.uid = uid;
+    }
+
+    public String getExtension(){
+        return this.extension;
+    }
+
+    public void setExtension(String extension){
+        this.extension = extension;
     }
 }

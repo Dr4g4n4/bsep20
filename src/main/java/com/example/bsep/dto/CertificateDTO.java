@@ -6,7 +6,7 @@ import java.util.Date;
 
 public class CertificateDTO {
 
-    private Long idSubject;
+    private String serialNumber;
     private Date startDate;
     private Date endDate;
     private boolean ca;
@@ -18,12 +18,14 @@ public class CertificateDTO {
     private String surname;
     private String email;
     private String uid;
+    private String extension;
 
     public CertificateDTO(){
 
     }
 
     public CertificateDTO(Certificate certificate){
+        this.serialNumber = certificate.getSerialNumber();
         this.startDate = certificate.getStartDate();
         this.endDate = certificate.getEndDate();
         this.ca = certificate.isCa();
@@ -31,18 +33,19 @@ public class CertificateDTO {
         this.idIssuer = certificate.getIdIssuer();
         this.purpose = certificate.getPurpose();
         this.city = certificate.getPurpose();
-        this.name = name;
-        this.surname = surname;
-        this.email = email;
-        this.uid = uid;
+        this.name = certificate.getName();
+        this.surname = certificate.getSurname();
+        this.email = certificate.getEmail();
+        this.uid = certificate.getUid();
+        this.extension = certificate.getExtension();
     }
 
-    public Long getIdSubject(){
-        return this.idSubject;
+    public String getSerialNumber(){
+        return this.serialNumber;
     }
 
-    public void setIdSubject(Long idSubject){
-        this.idSubject = idSubject;
+    public void setSerialNumber(String serialNumber){
+        this.serialNumber = serialNumber;
     }
 
     public Date getStartDate(){
@@ -123,6 +126,12 @@ public class CertificateDTO {
 
     public void setUid(String uid){
         this.uid = uid;
+    }
+
+    public String getExtension(){  return this.extension; }
+
+    public void setExtension(String extension){
+        this.extension = extension;
     }
 
 }
