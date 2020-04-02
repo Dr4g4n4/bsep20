@@ -9,8 +9,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface CertificateRepository extends JpaRepository<Certificate, Long> {
 
-    Certificate findOneByIdSubject(Long idSubject);
-
     List<Certificate> findAll();
 
     List<Certificate> findAllByCa(boolean ca);
@@ -20,6 +18,7 @@ public interface CertificateRepository extends JpaRepository<Certificate, Long> 
     @SuppressWarnings("unchecked")
     Certificate save(Certificate certificate);
 
+    Certificate findOneById(Long id);
 
-
+    Certificate findOneBySerialNumberSubject(String serialNumber);
 }

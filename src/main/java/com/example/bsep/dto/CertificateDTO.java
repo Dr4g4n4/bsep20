@@ -2,14 +2,16 @@ package com.example.bsep.dto;
 
 import com.example.bsep.model.Certificate;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 public class CertificateDTO {
 
+    private  Long id;
     private String serialNumberSubject;
     private String serialNumberIssuer;
-    private Date startDate;
-    private Date endDate;
+    private String startDate;
+    private String endDate;
     private boolean ca;
     private boolean revoked;
     private String purpose;
@@ -25,14 +27,15 @@ public class CertificateDTO {
     }
 
     public CertificateDTO(Certificate certificate){
+        this.id = certificate.getId();
         this.serialNumberSubject = certificate.getSerialNumberSubject();
         this.serialNumberIssuer = certificate.getSerialNumberIssuer();
-        this.startDate = certificate.getStartDate();
-        this.endDate = certificate.getEndDate();
+        this.startDate = certificate.getStartDate().toString();
+        this.endDate = certificate.getEndDate().toString();
         this.ca = certificate.isCa();
         this.revoked = certificate.isRevoked();
         this.purpose = certificate.getPurpose();
-        this.city = certificate.getPurpose();
+        this.city = certificate.getCity();
         this.name = certificate.getName();
         this.surname = certificate.getSurname();
         this.email = certificate.getEmail();
@@ -48,19 +51,19 @@ public class CertificateDTO {
         this.serialNumberSubject = serialNumberSubject;
     }
 
-    public Date getStartDate(){
+    public String getStartDate(){
         return this.startDate;
     }
 
-    public void setStartDate(Date startDate){
+    public void setStartDate(String startDate){
         this.startDate = startDate;
     }
 
-    public Date getEndDate(){
+    public String getEndDate(){
         return this.endDate;
     }
 
-    public void setEndDate(Date endDate){
+    public void setEndDate(String endDate){
         this.endDate = endDate;
     }
 
@@ -134,4 +137,8 @@ public class CertificateDTO {
         this.extension = extension;
     }
 
+    public void setId(Long id) { this.id = id; }
+
+    public Long getId() { return id; }
 }
+

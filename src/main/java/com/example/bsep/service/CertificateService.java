@@ -35,10 +35,6 @@ public class CertificateService {
     @Autowired
     KeyStoreReader keyStoreReader;
 
-    public Certificate getById(Long id) {
-        return certificateRepository.findOneByIdSubject(id);
-    }
-
     public List<CertificateDTO> getAllCertificates(){
         List<Certificate> all = certificateRepository.findAll();
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
@@ -144,7 +140,7 @@ public class CertificateService {
         KeyPair keyPairSubject = getKeyPair();
         Date startDate = certificate.getStartDate();
         Date endDate = certificate.getEndDate();
-        String serialNumber = certificate.getSerialNumberIssuer();
+        String serialNumber = certificate.getSerialNumberSubject();
 
         // podaci vlasnika
         X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
@@ -172,4 +168,11 @@ public class CertificateService {
         }
         return null;
     }
-}
+
+    public CertificateDTO getCertificate(Long id){
+        return new CertificateDTO(certificateRepository.findOneById(id));
+    }
+
+    public CertificateDTO getCertificate(String serialNumber){
+        return new CertificateDTO(certificateRepository.findOneBySerialNumberSubject(serialNumber));
+    }}
