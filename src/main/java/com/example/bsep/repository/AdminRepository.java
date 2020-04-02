@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface AdminRepository  extends JpaRepository<Admin,Long>{
 
-        Admin findAdminByUsername (String username);
+        Admin findOneByUsername (String username);
 
         @Query("select c.username from Admin c")
         List<String> findAllUsernames();

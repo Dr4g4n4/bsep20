@@ -32,6 +32,9 @@ public class Admin implements UserDetails {
     @Column(name = "last_password_reset_date", nullable = true)
     private Timestamp lastPasswordResetDate;
 
+    @Column(name = "enabled", nullable = true)
+    private boolean enabled; // authorization for accessing methods
+
     public Long getId() {
         return id;
     }
@@ -81,12 +84,12 @@ public class Admin implements UserDetails {
 
     @Override
     public String getPassword() {
-        return null;
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return null;
+        return username;
     }
 
     @Override
@@ -106,10 +109,14 @@ public class Admin implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return false;
+        return enabled;
     }
 
     public void setAuthorities(List<Authority> authorities) {
         this.authorities = authorities;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

@@ -1,20 +1,17 @@
 package com.example.bsep.security;
 
-
+import java.util.Date;
 import com.example.bsep.common.TimeProvider;
 import com.example.bsep.model.Admin;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-
-import java.util.Date;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Component
 public class TokenUtils {
@@ -99,7 +96,8 @@ public class TokenUtils {
         final String username = getUsernameFromToken(token);
         final Date created = getIssuedAtDateFromToken(token);
 
-        return (username != null && username.equals(userDetails.getUsername()));
+        return (username != null && username.equals(userDetails.getUsername())
+                && !isCreatedBeforeLastPasswordReset(created, admin.getLastPasswordResetDate()));
     }
 
     public String getUsernameFromToken(String token) {

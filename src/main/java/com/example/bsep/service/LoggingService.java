@@ -27,6 +27,7 @@ public class LoggingService implements UserDetailsService {
         if (!validateFields(username, password)) {
             return null;
         }
+        //System.out.println(passwordEncoder.encode(password));
 
         Admin user = (Admin) loadUserByUsername(username);
 
@@ -42,10 +43,8 @@ public class LoggingService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        Admin user = userRepo.findAdminByUsername(username);
-
+        Admin user = userRepo.findOneByUsername(username);
         return user;
-
     }
 
     private boolean validateFields(String username, String password ) {
@@ -53,18 +52,7 @@ public class LoggingService implements UserDetailsService {
     }
 
     private boolean validateUsername(String username) {
-        List<String> allUsernames = userRepo.findAllUsernames();
-        if (username.equals("")) {
-            return false;
-        }
-
-        for (String u : allUsernames) {
-            if (u.equals(username)) {
-                return false;
-            }
-        }
-
-        return true;
+       return username.equals("") ? false : true ;
     }
 
     private boolean validatePass(String pass) {
