@@ -87,7 +87,6 @@ public class CertificateService {
         KeyPair selfKey = getKeyPair();
         SubjectData subjectData = getSubjectData(cert,selfKey.getPublic());
 
-        // preuzmem podatke iz sertifikata
         X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
         builder.addRDN(BCStyle.CN, certificate.getName() + " " + certificate.getSurname());
         builder.addRDN(BCStyle.SURNAME, certificate.getName());
@@ -96,30 +95,18 @@ public class CertificateService {
         builder.addRDN(BCStyle.E, certificate.getEmail());
         builder.addRDN(BCStyle.UID, certificate.getUid());
         IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
-
         CertificateGenerator certGenerator = new CertificateGenerator();
         X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
-        String keyStoreFile = "ks/"+certificate.getCity()+".jks";
+        String keyStoreFile = "ks/"+certificate.getCity()+ certificate.getUid() + ".jks";
 
         // generisanje keyStore
         KeyStoreWriter keyStoreW = new KeyStoreWriter();
         keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
-        keyStoreW.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "admin123".toCharArray(), certX509);
+        keyStoreW.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
         keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
 
-        keyStoreW = new KeyStoreWriter();
-        keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
-        keyStoreW.saveKeyStore("ks/"+certificate.getCity()+"Store.jks", "sifra1".toCharArray());
-
-        if(certificate.isCa()) {
-            keyStoreFile = "ks/ksCA.jks";
-        }
-        else {
-            keyStoreFile = "ks/nonCA_KS.jks";
-        }
-
+        keyStoreFile = "ks/ksCA.jks";
         KeyStoreWriter kw = new KeyStoreWriter();
-
         kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
         kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
         kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
@@ -127,24 +114,13 @@ public class CertificateService {
 
     public void createNonSelfSignedCertificate(Certificate certificate){
         Certificate newCertificate = certificateRepository.save(certificate);
-
-        // ucitava se privatni kljuc sertifikata koji izdaje drugi sertifikat
+        // ucitava se privatni kljuc sertifikata koji izdaje neki drugi sertifikat
         IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", certificate.getSerialNumberIssuer(), "sifra1".toCharArray(), "sifra1".toCharArray());
         KeyPair subjectKey = getKeyPair();
         SubjectData subjectData = getSubjectData(newCertificate,subjectKey.getPublic());
         CertificateGenerator certGenerator = new CertificateGenerator();
         X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
-        String keyStoreFile = "ks/"+certificate.getCity()+".jks";
-
-        // generisanje keyStore
-        KeyStoreWriter keyStoreW = new KeyStoreWriter();
-        keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
-        keyStoreW.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), "admin123".toCharArray(), certX509);
-        keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
-
-        keyStoreW = new KeyStoreWriter();
-        keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
-        keyStoreW.saveKeyStore("ks/"+certificate.getCity()+"Store.jks", "sifra1".toCharArray());
+        String keyStoreFile = "";
 
         if(certificate.isCa()) {
             keyStoreFile = "ks/ksCA.jks";
@@ -154,7 +130,6 @@ public class CertificateService {
         }
 
         KeyStoreWriter kw = new KeyStoreWriter();
-
         kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
         kw.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), "sifra1".toCharArray(), certX509);
         kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
