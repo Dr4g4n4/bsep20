@@ -2,9 +2,6 @@ package com.example.bsep.dto;
 
 import com.example.bsep.model.Certificate;
 
-import java.time.LocalDate;
-import java.util.Date;
-
 public class CertificateDTO {
 
     private  Long id;
@@ -19,7 +16,6 @@ public class CertificateDTO {
     private String name;
     private String surname;
     private String email;
-    private String uid;
     private String extension;
 
     public CertificateDTO(){
@@ -39,7 +35,6 @@ public class CertificateDTO {
         this.name = certificate.getName();
         this.surname = certificate.getSurname();
         this.email = certificate.getEmail();
-        this.uid = certificate.getUid();
         this.extension = certificate.getExtension();
     }
 
@@ -123,12 +118,6 @@ public class CertificateDTO {
 
     public void setEmail(String email){
         this.email = email;
-    }
-
-    public String getUid(){  return this.uid; }
-
-    public void setUid(String uid){
-        this.uid = uid;
     }
 
     public String getExtension(){  return this.extension; }

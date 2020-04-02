@@ -93,11 +93,10 @@ public class CertificateService {
         builder.addRDN(BCStyle.GIVENNAME, certificate.getSurname());
         builder.addRDN(BCStyle.L , certificate.getCity());
         builder.addRDN(BCStyle.E, certificate.getEmail());
-        builder.addRDN(BCStyle.UID, certificate.getUid());
         IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
         CertificateGenerator certGenerator = new CertificateGenerator();
         X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
-        String keyStoreFile = "ks/"+certificate.getCity()+ certificate.getUid() + ".jks";
+        String keyStoreFile = "ks/"+certificate.getCity()+ certificate.getEmail() + ".jks";
 
         // generisanje keyStore
         KeyStoreWriter keyStoreW = new KeyStoreWriter();
@@ -149,7 +148,6 @@ public class CertificateService {
         builder.addRDN(BCStyle.GIVENNAME, certificate.getSurname());
         builder.addRDN(BCStyle.L , certificate.getCity());
         builder.addRDN(BCStyle.E, certificate.getEmail());
-        builder.addRDN(BCStyle.UID, certificate.getUid());
 
         return new SubjectData(pk, builder.build(), serialNumber, startDate, endDate);
     }
