@@ -47,9 +47,6 @@ public class Certificate {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "uid", nullable = false)
-    private String uid;
-
     @Column(name = "extension", nullable = false)
     private String extension;
 
@@ -70,7 +67,6 @@ public class Certificate {
         this.name = name;
         this.surname = surname;
         this.email = email;
-        this.uid = uid;
         this.extension = extension;
     }
 
@@ -152,12 +148,6 @@ public class Certificate {
 
     public void setEmail(String email){
         this.email = email;
-    }
-
-    public String getUid(){  return this.uid; }
-
-    public void setUid(String uid){
-        this.uid = uid;
     }
 
     public String getExtension(){
