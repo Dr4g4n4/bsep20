@@ -17,7 +17,7 @@ public class Certificate {
     private String serialNumberSubject;
 
     // ko
-    @Column(name = "serialNumberIssuer", nullable = false, unique = true)
+    @Column(name = "serialNumberIssuer", nullable = false)
     private String serialNumberIssuer;
 
     @Column(name = "startDate", nullable = false)
@@ -167,4 +167,8 @@ public class Certificate {
     public void setExtension(String extension){
         this.extension = extension;
     }
+
+    public Long getId() { return id; }
+
+    public void setId(Long id) { this.id = id; }
 }

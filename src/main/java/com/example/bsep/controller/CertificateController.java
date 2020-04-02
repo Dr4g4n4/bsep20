@@ -76,5 +76,9 @@ public class CertificateController {
     public void createNoCACertificate(@RequestBody Certificate certificate){
         certificateService.createNonSelfSignedCertificate(certificate);
     }
+    @RequestMapping(method = RequestMethod.GET, value = "/{serialNumber}")
+    public CertificateDTO getCertificate(@PathVariable String serialNumber){
+        return certificateService.getCertificate(serialNumber);
+    }
 
 }

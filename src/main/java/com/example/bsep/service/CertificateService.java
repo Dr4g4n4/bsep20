@@ -35,10 +35,6 @@ public class CertificateService {
     @Autowired
     KeyStoreReader keyStoreReader;
 
-    public Certificate getById(Long id) {
-        return certificateRepository.findOneByIdSubject(id);
-    }
-
     public List<CertificateDTO> getAllCertificates(){
         List<Certificate> all = certificateRepository.findAll();
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
@@ -133,7 +129,7 @@ public class CertificateService {
         Certificate newCertificate = certificateRepository.save(certificate);
 
         // ucitava se privatni kljuc sertifikata koji izdaje drugi sertifikat
-        IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", Long.toString(certificate.getIdIssuer()), "sifra1".toCharArray(), "sifra1".toCharArray());
+        IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", certificate.getSerialNumberIssuer(), "sifra1".toCharArray(), "sifra1".toCharArray());
         KeyPair subjectKey = getKeyPair();
         SubjectData subjectData = getSubjectData(newCertificate,subjectKey.getPublic());
         CertificateGenerator certGenerator = new CertificateGenerator();
@@ -169,7 +165,7 @@ public class CertificateService {
         KeyPair keyPairSubject = getKeyPair();
         Date startDate = certificate.getStartDate();
         Date endDate = certificate.getEndDate();
-        String serialNumber = Long.toString(certificate.getIdIssuer());
+        String serialNumber = certificate.getSerialNumberSubject();
 
         // podaci vlasnika
         X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
@@ -197,4 +193,11 @@ public class CertificateService {
         }
         return null;
     }
-}
+
+    public CertificateDTO getCertificate(Long id){
+        return new CertificateDTO(certificateRepository.findOneById(id));
+    }
+
+    public CertificateDTO getCertificate(String serialNumber){
+        return new CertificateDTO(certificateRepository.findOneBySerialNumberSubject(serialNumber));
+    }}
