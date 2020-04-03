@@ -19,6 +19,8 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
+
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,45 @@ public class CertificateService {
 
     @Autowired
     KeyStoreReader keyStoreReader;
+
+    public boolean validateFileds(Certificate certificate){
+        boolean returnValue = true;
+        try{
+            Long.parseLong(certificate.getSerialNumberIssuer());
+            Long.parseLong(certificate.getSerialNumberSubject());
+            returnValue = true;
+        }catch (NumberFormatException e){
+            returnValue = false;
+        }
+
+        List<Certificate>certificates = certificateRepository.findAll();
+        for(Certificate c:certificates){
+            if(c.getSerialNumberSubject().equals(certificate.getSerialNumberSubject())){
+                returnValue = false;
+            }
+        }
+
+        if(!certificate.getPurpose().equals("POTPISIVANJE SERTIFIKATA") && !certificate.getPurpose().equals("POTPISIVANJE CRLa")){
+            returnValue = false;
+        }
+
+        if(certificate.getEndDate().compareTo(certificate.getStartDate()) <= 0){
+            returnValue = false;
+        }
+
+         String emailRegex = "^[a-zA-Z0-9_+&*-] + (?:\\."+
+                 "[a-zA-Z0-9_+&*-]+)*@"+
+                 "A-Z]{2,7}$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        if(certificate.getEmail() == null || pattern.matcher(certificate.getEmail()).matches()){
+            returnValue = false;
+        }
+
+        if(certificate.getCity()==null || certificate.getCity().equals("") || certificate.getName()==null || certificate.getName().equals("") || certificate.getSurname() == null || certificate.getSurname().equals("")){
+            returnValue = false;
+        }
+        return returnValue;
+    }
 
     public List<CertificateDTO> getAllCertificates(){
         List<Certificate> all = certificateRepository.findAll();
@@ -82,61 +123,76 @@ public class CertificateService {
         return retValue;
     }
 
-    public void createSelfSignedCertificate(Certificate certificate){
-        Certificate cert = certificateRepository.save(certificate);
-        KeyPair selfKey = getKeyPair();
-        SubjectData subjectData = getSubjectData(cert,selfKey.getPublic());
+    public boolean createSelfSignedCertificate(Certificate certificate){
+        boolean ok = validateFileds(certificate);
+        certificateRepository.save(certificate);
+        if(ok){
+            Certificate cert = certificateRepository.save(certificate);
+            KeyPair selfKey = getKeyPair();
+            SubjectData subjectData = getSubjectData(cert,selfKey.getPublic());
 
-        X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
-        builder.addRDN(BCStyle.CN, certificate.getName() + " " + certificate.getSurname());
-        builder.addRDN(BCStyle.SURNAME, certificate.getName());
-        builder.addRDN(BCStyle.GIVENNAME, certificate.getSurname());
-        builder.addRDN(BCStyle.L , certificate.getCity());
-        builder.addRDN(BCStyle.E, certificate.getEmail());
-        IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
-        CertificateGenerator certGenerator = new CertificateGenerator();
-        X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
-        String keyStoreFile = "ks/"+certificate.getCity()+ certificate.getEmail() + ".jks";
+            X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
+            builder.addRDN(BCStyle.CN, certificate.getName() + " " + certificate.getSurname());
+            builder.addRDN(BCStyle.SURNAME, certificate.getName());
+            builder.addRDN(BCStyle.GIVENNAME, certificate.getSurname());
+            builder.addRDN(BCStyle.L , certificate.getCity());
+            builder.addRDN(BCStyle.E, certificate.getEmail());
+            IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
+            CertificateGenerator certGenerator = new CertificateGenerator();
+            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
+            String keyStoreFile = "ks/"+certificate.getCity()+ certificate.getEmail() + ".jks";
 
-        // generisanje keyStore
-        KeyStoreWriter keyStoreW = new KeyStoreWriter();
-        keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
-        keyStoreW.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
-        keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
+            // generisanje keyStore
+            KeyStoreWriter keyStoreW = new KeyStoreWriter();
+            keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
+            keyStoreW.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
+            keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
 
-        keyStoreFile = "ks/ksCA.jks";
-        KeyStoreWriter kw = new KeyStoreWriter();
-        kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
-        kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
-        kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
+            keyStoreFile = "ks/ksCA.jks";
+            KeyStoreWriter kw = new KeyStoreWriter();
+            kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
+            kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
+            kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
+            return true;
+        }
+        else{
+            return false;
+        }
+
     }
 
-    public void createNonSelfSignedCertificate(Certificate certificate){
-        Certificate newCertificate = certificateRepository.save(certificate);
-        // ucitava se privatni kljuc sertifikata koji izdaje neki drugi sertifikat
-        IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", certificate.getSerialNumberIssuer(), "sifra1".toCharArray(), "sifra1".toCharArray());
-        KeyPair subjectKey = getKeyPair();
-        SubjectData subjectData = getSubjectData(newCertificate,subjectKey.getPublic());
-        CertificateGenerator certGenerator = new CertificateGenerator();
-        X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
-        String keyStoreFile = "";
+    public boolean createNonSelfSignedCertificate(Certificate certificate){
+        boolean ok = validateFileds(certificate);
+        if(ok){
+            Certificate newCertificate = certificateRepository.save(certificate);
+            // ucitava se privatni kljuc sertifikata koji izdaje neki drugi sertifikat
+            IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", certificate.getSerialNumberIssuer(), "sifra1".toCharArray(), "sifra1".toCharArray());
+            KeyPair subjectKey = getKeyPair();
+            SubjectData subjectData = getSubjectData(newCertificate,subjectKey.getPublic());
+            CertificateGenerator certGenerator = new CertificateGenerator();
+            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
+            String keyStoreFile = "";
 
-        if(certificate.isCa()) {
-            keyStoreFile = "ks/ksCA.jks";
+            if(certificate.isCa()) {
+                keyStoreFile = "ks/ksCA.jks";
+            }
+            else {
+                keyStoreFile = "ks/nonCA_KS.jks";
+            }
+
+            KeyStoreWriter kw = new KeyStoreWriter();
+            kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
+            kw.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), "sifra1".toCharArray(), certX509);
+            kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
+            return true;
         }
-        else {
-            keyStoreFile = "ks/nonCA_KS.jks";
+        else{
+            return false;
         }
-
-        KeyStoreWriter kw = new KeyStoreWriter();
-        kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
-        kw.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), "sifra1".toCharArray(), certX509);
-        kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
-
     }
 
     private SubjectData getSubjectData(Certificate certificate, PublicKey pk) {
-        KeyPair keyPairSubject = getKeyPair();
+        // KeyPair keyPairSubject = getKeyPair();
         Date startDate = certificate.getStartDate();
         Date endDate = certificate.getEndDate();
         String serialNumber = certificate.getSerialNumberSubject();

@@ -68,14 +68,29 @@ public class CertificateController {
     }
 
     @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createSelf")
-    public void createCACertificate(@RequestBody Certificate certificate){
-        certificateService.createSelfSignedCertificate(certificate);
+    public void  createCACertificate(@RequestBody Certificate certificate){
+        boolean retValue = certificateService.createSelfSignedCertificate(certificate);
+// ResponseEntity<ResponseEntity>
+     /*   if(retValue){
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }*/
     }
 
     @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createNoSelf")
-    public void createNoCACertificate(@RequestBody Certificate certificate){
-        certificateService.createNonSelfSignedCertificate(certificate);
+    public ResponseEntity<ResponseEntity> createNoCACertificate(@RequestBody Certificate certificate){
+        boolean retValue = certificateService.createNonSelfSignedCertificate(certificate);
+        retValue = true;
+        if(retValue){
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
+
     @RequestMapping(method = RequestMethod.GET, value = "/{serialNumber}")
     public CertificateDTO getCertificate(@PathVariable String serialNumber){
         return certificateService.getCertificate(serialNumber);
