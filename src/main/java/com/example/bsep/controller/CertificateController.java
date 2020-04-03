@@ -1,6 +1,7 @@
 package com.example.bsep.controller;
 
 import com.example.bsep.dto.CertificateDTO;
+import com.example.bsep.keystores.KeyStoreWriter;
 import com.example.bsep.model.Certificate;
 import com.example.bsep.service.CertificateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,9 +68,10 @@ public class CertificateController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createSelf")
-    public void  createCACertificate(@RequestBody Certificate certificate){
-        boolean retValue = certificateService.createSelfSignedCertificate(certificate);
+    @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createSelf/{isCa}")
+    public void  createCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
+        System.out.print("Kontroler da li je CA:   " + isCa);
+        boolean retValue = certificateService.createSelfSignedCertificate(certificate, isCa);
 // ResponseEntity<ResponseEntity>
      /*   if(retValue){
             return new ResponseEntity<>(HttpStatus.OK);
@@ -79,9 +81,9 @@ public class CertificateController {
         }*/
     }
 
-    @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createNoSelf")
-    public ResponseEntity<ResponseEntity> createNoCACertificate(@RequestBody Certificate certificate){
-        boolean retValue = certificateService.createNonSelfSignedCertificate(certificate);
+    @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createNoSelf/{isCa}")
+    public ResponseEntity<ResponseEntity> createNoCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
+        boolean retValue = certificateService.createNonSelfSignedCertificate(certificate, isCa);
         retValue = true;
         if(retValue){
             return new ResponseEntity<>(HttpStatus.OK);

@@ -49,7 +49,7 @@ public class CertificateService {
 
         List<Certificate>certificates = certificateRepository.findAll();
         for(Certificate c:certificates){
-            if(c.getSerialNumberSubject().equals(certificate.getSerialNumberSubject())){
+            if(c.getSerialNumberSubject().equals(certificate.getSerialNumberSubject()) || c.getEmail().equals(certificate.getEmail())){
                 returnValue = false;
             }
         }
@@ -73,6 +73,8 @@ public class CertificateService {
         if(certificate.getCity()==null || certificate.getCity().equals("") || certificate.getName()==null || certificate.getName().equals("") || certificate.getSurname() == null || certificate.getSurname().equals("")){
             returnValue = false;
         }
+
+        System.out.println("Da li je CA:   " + certificate.isCa());
         return returnValue;
     }
 
@@ -89,7 +91,7 @@ public class CertificateService {
         List<Certificate> all = certificateRepository.findAllByCa(true);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
-            if(!c.isRevoked())
+            if((!c.isRevoked()) && (c.isCa()))
             retValue.add(new CertificateDTO(c));
         }
         return retValue;
@@ -123,7 +125,8 @@ public class CertificateService {
         return retValue;
     }
 
-    public boolean createSelfSignedCertificate(Certificate certificate){
+    public boolean createSelfSignedCertificate(Certificate certificate, boolean isCa){
+        certificate.setCa(isCa);
         boolean ok = validateFileds(certificate);
         certificateRepository.save(certificate);
         if(ok){
@@ -140,11 +143,12 @@ public class CertificateService {
             IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
             CertificateGenerator certGenerator = new CertificateGenerator();
             X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
-            String keyStoreFile = "ks/"+certificate.getCity()+ certificate.getEmail() + ".jks";
+            String keyStoreFile = "ks/"+certificate.getCity() + "_" + certificate.getEmail() + ".jks";
 
             // generisanje keyStore
             KeyStoreWriter keyStoreW = new KeyStoreWriter();
             keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
+            System.out.println("Serijski broj za prvo:  " + subjectData.getSerialNumber());
             keyStoreW.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
             keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
 
@@ -161,7 +165,8 @@ public class CertificateService {
 
     }
 
-    public boolean createNonSelfSignedCertificate(Certificate certificate){
+    public boolean createNonSelfSignedCertificate(Certificate certificate, boolean isCa){
+        certificate.setCa(isCa);
         boolean ok = validateFileds(certificate);
         if(ok){
             Certificate newCertificate = certificateRepository.save(certificate);
@@ -192,7 +197,7 @@ public class CertificateService {
     }
 
     private SubjectData getSubjectData(Certificate certificate, PublicKey pk) {
-        // KeyPair keyPairSubject = getKeyPair();
+        //KeyPair keyPairSubject = getKeyPair();
         Date startDate = certificate.getStartDate();
         Date endDate = certificate.getEndDate();
         String serialNumber = certificate.getSerialNumberSubject();
@@ -205,6 +210,7 @@ public class CertificateService {
         builder.addRDN(BCStyle.L , certificate.getCity());
         builder.addRDN(BCStyle.E, certificate.getEmail());
 
+        System.out.println("Serijski broj:  " + serialNumber);
         return new SubjectData(pk, builder.build(), serialNumber, startDate, endDate);
     }
 
