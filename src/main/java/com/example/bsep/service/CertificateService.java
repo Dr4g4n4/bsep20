@@ -74,6 +74,12 @@ public class CertificateService {
             returnValue = false;
         }
 
+        // provjera datuma
+        Certificate issuer = certificateRepository.findOneBySerialNumberIssuer(certificate.getSerialNumberIssuer());
+        if(issuer.getEndDate().compareTo(certificate.getEndDate()) < 0 ){
+            returnValue = false;
+        }
+
         System.out.println("Da li je CA:   " + certificate.isCa());
         return returnValue;
     }
@@ -140,6 +146,7 @@ public class CertificateService {
             builder.addRDN(BCStyle.GIVENNAME, certificate.getSurname());
             builder.addRDN(BCStyle.L , certificate.getCity());
             builder.addRDN(BCStyle.E, certificate.getEmail());
+
             IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
             CertificateGenerator certGenerator = new CertificateGenerator();
             X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
