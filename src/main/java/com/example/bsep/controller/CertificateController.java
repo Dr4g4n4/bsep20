@@ -125,6 +125,11 @@ public class CertificateController {
 
     }
 
+    @RequestMapping(method = RequestMethod.POST, value = "/revokeCertificate/{id}")
+    public void revokeCertificate(@PathVariable String id){
+
+    }
+
 }
 
 

@@ -1,8 +1,12 @@
 package com.example.bsep.model;
 
+import com.example.bsep.dto.CertificateDTO;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Entity
@@ -50,6 +54,12 @@ public class Certificate {
     @Column(name = "extension", nullable = false)
     private String extension;
 
+    @Column(name = "revocation_reason", nullable = true)
+    private String revocationReason;        // only set if cert is revoked
+
+    @Column(name = "revocation_timestamp", nullable = true)
+    private Timestamp revocationTimestamp;  // when cert is revoked
+
     public Certificate(){
 
     }
@@ -68,6 +78,25 @@ public class Certificate {
         this.surname = surname;
         this.email = email;
         this.extension = extension;
+    }
+
+    public Certificate(CertificateDTO c) {
+        this.serialNumberSubject = c.getSerialNumbeSubejctr();
+        this.serialNumberIssuer = c.getSerialNumberIssuerr();
+        try {
+            this.startDate = new SimpleDateFormat("yyyy/MM/dd hh:hh").parse(c.getStartDate());
+            this.endDate = new SimpleDateFormat("yyyy/MM/dd hh:hh").parse(c.getEndDate());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        this.ca = c.isCa();
+        this.revoked = c.isRevoked();
+        this.purpose = c.getPurpose();
+        this.city = c.getCity();
+        this.name = c.getName();
+        this.surname = c.getSurname();
+        this.email = c.getEmail();
+        this.extension = c.getExtension();      // ovo promeniti kad se urade extenzije
     }
 
     public String getSerialNumberSubject(){
@@ -161,4 +190,20 @@ public class Certificate {
     public Long getId() { return id; }
 
     public void setId(Long id) { this.id = id; }
+
+    public String getRevocationReason() {
+        return revocationReason;
+    }
+
+    public void setRevocationReason(String revocationReason) {
+        this.revocationReason = revocationReason;
+    }
+
+    public Timestamp getRevocationTimestamp() {
+        return revocationTimestamp;
+    }
+
+    public void setRevocationTimestamp(Timestamp revocationTimestamp) {
+        this.revocationTimestamp = revocationTimestamp;
+    }
 }

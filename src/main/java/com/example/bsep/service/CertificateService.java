@@ -145,9 +145,11 @@ public class CertificateService {
             builder.addRDN(BCStyle.GIVENNAME, certificate.getSurname());
             builder.addRDN(BCStyle.L , certificate.getCity());
             builder.addRDN(BCStyle.E, certificate.getEmail());
+
             IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
             CertificateGenerator certGenerator = new CertificateGenerator();
             X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
+
             String keyStoreFile = "ks/"+certificate.getCity() + "_" + certificate.getEmail() + ".jks";
 
             // generisanje keyStore
@@ -282,5 +284,13 @@ public class CertificateService {
         return file;
     }
 
+    public boolean revokeCertificate(String id) {
+        CertificateDTO baseDtoCertificate = getCertificate(id);
+        Certificate baseCertificate = new Certificate(baseDtoCertificate);
+        baseCertificate.setRevoked(true);
+        certificateRepository.save(baseCertificate);
+
+        return true;
+    }
 
 }
