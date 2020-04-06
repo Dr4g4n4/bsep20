@@ -1,6 +1,7 @@
 package com.example.bsep.service;
 
 import com.example.bsep.certificates.CertificateGenerator;
+import com.example.bsep.certificates.CertificateReader;
 import com.example.bsep.data.IssuerData;
 import com.example.bsep.data.SubjectData;
 import com.example.bsep.dto.CertificateDTO;
@@ -9,12 +10,16 @@ import com.example.bsep.keystores.KeyStoreWriter;
 import com.example.bsep.model.Certificate;
 import com.example.bsep.repository.CertificateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.*;
+import java.nio.charset.Charset;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,6 +41,9 @@ public class CertificateService {
 
     @Autowired
     KeyStoreReader keyStoreReader;
+
+    //@Autowired
+    //CertificateReader certReader;
 
     public boolean validateFileds(Certificate certificate){
         boolean returnValue = true;
@@ -235,4 +243,47 @@ public class CertificateService {
 
     public CertificateDTO getCertificate(String serialNumber){
         return new CertificateDTO(certificateRepository.findOneBySerialNumberSubject(serialNumber));
-    }}
+    }
+
+    public File downloadCertificate(Long id) {
+        CertificateDTO wantedCertificate = getCertificate(id);
+        java.security.cert.Certificate c = findFromFile(wantedCertificate.getSerialNumbeSubejctr(), wantedCertificate.isCa());
+        File downloadFile  = writeCertificate(c);
+        try {
+            FileInputStream inStream = new FileInputStream(downloadFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return downloadFile;
+    }
+
+    private java.security.cert.Certificate findFromFile(String serialNumber, boolean isCA) {
+        String keyStoreFile = isCA ? "ks/ksCA.jks" : "ks/ksnonCA.jks" ;
+        return keyStoreReader.readCertificate(keyStoreFile, "sifra1", serialNumber);
+    }
+
+    private File writeCertificate(java.security.cert.Certificate cert) {
+        File file = new File("certificate.cer");
+        FileOutputStream os = null;
+        byte[] buf = new byte[0];
+        try {
+            buf = cert.getEncoded();
+            os = new FileOutputStream(file);
+            os.write(buf);
+            Writer wr = new OutputStreamWriter(os, Charset.forName("UTF-8"));
+            wr.write(new sun.misc.BASE64Encoder().encode(buf));
+            wr.flush();
+            os.close();
+        } catch (CertificateEncodingException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return file;
+    }
+
+
+}

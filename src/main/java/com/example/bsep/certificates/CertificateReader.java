@@ -1,6 +1,8 @@
 package com.example.bsep.certificates;
 
 
+import org.springframework.stereotype.Component;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -10,7 +12,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
+@Component
 public class CertificateReader {
 
 
@@ -19,15 +23,15 @@ public class CertificateReader {
 
     public void testIt() {
         System.out.println("Cita sertifikat iz Base64 formata");
-        readFromBase64EncFile();
+        readFromBase64EncFile(BASE64_ENC_CERT_FILE);
         System.out.println("\n\nCita sertifikat iz binarnog formata");
         readFromBinEncFile();
     }
 
 
-    private void readFromBase64EncFile() {
+    public Certificate readFromBase64EncFile(String filepath) {
         try {
-            FileInputStream fis = new FileInputStream(BASE64_ENC_CERT_FILE);
+            FileInputStream fis = new FileInputStream(filepath);
             BufferedInputStream bis = new BufferedInputStream(fis);
 
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -37,9 +41,9 @@ public class CertificateReader {
             //-----BEGIN CERTIFICATE-----,
             //i
             //-----END CERTIFICATE-----.
-            while (bis.available() > 0) {
+            if (bis.available() > 0) {
                 Certificate cert = cf.generateCertificate(bis);
-                System.out.println(cert.toString());
+                return cert;
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -48,6 +52,7 @@ public class CertificateReader {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
     @SuppressWarnings("rawtypes")
     private void readFromBinEncFile() {
