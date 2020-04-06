@@ -1,16 +1,23 @@
 package com.example.bsep.controller;
 
+import com.example.bsep.certificates.CertificateReader;
 import com.example.bsep.dto.CertificateDTO;
 import com.example.bsep.keystores.KeyStoreWriter;
 import com.example.bsep.model.Certificate;
 import com.example.bsep.service.CertificateService;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import javax.ws.rs.core.Response;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.cert.CertificateEncodingException;
 import java.util.List;
 
 @RestController
@@ -19,6 +26,9 @@ public class CertificateController {
 
     @Autowired
     private CertificateService certificateService;
+
+    @Autowired
+    private CertificateReader certificateReader;
 
     @RequestMapping(method=RequestMethod.GET, value = "/getAllCertificates")
     public ResponseEntity<List<CertificateDTO>> getAllCerts() {
@@ -98,4 +108,23 @@ public class CertificateController {
         return certificateService.getCertificate(serialNumber);
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "/downloadCertificate/{id}")
+    public void downloadCertificate(HttpServletRequest request, HttpServletResponse response, @PathVariable Long id){
+        File certificateForDownload = certificateService.downloadCertificate(id);
+        response.setContentType("application/pkix-cert");
+        response.setContentLength((int) certificateForDownload.length());
+        response.addHeader("Content-Disposition", "attachment; filename="+ certificateForDownload.getName());
+
+        try {
+            Files.copy(Paths.get(certificateForDownload.getPath()), response.getOutputStream() );
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 }
+
+
