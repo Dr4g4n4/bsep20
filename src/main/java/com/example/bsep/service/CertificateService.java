@@ -42,9 +42,6 @@ public class CertificateService {
     @Autowired
     KeyStoreReader keyStoreReader;
 
-    //@Autowired
-    //CertificateReader certReader;
-
     public boolean validateFileds(Certificate certificate){
         boolean returnValue = true;
         try{
