@@ -247,7 +247,7 @@ public class CertificateService {
 
     public File downloadCertificate(Long id) {
         CertificateDTO wantedCertificate = getCertificate(id);
-        java.security.cert.Certificate c = findFromFile(wantedCertificate.getSerialNumbeSubejctr(), wantedCertificate.isCa());
+        java.security.cert.Certificate c = findFromFile(wantedCertificate.getSerialNumberSubject(), wantedCertificate.isCa());
         File downloadFile  = writeCertificate(c);
         try {
             FileInputStream inStream = new FileInputStream(downloadFile);
