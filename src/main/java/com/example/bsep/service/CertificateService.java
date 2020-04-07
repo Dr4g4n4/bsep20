@@ -78,16 +78,18 @@ public class CertificateService {
             returnValue = false;
         }
 
-        if(certificate.getCity()==null || certificate.getCity().equals("") || certificate.getName()==null || certificate.getName().equals("") || certificate.getSurname() == null || certificate.getSurname().equals("")){
+        if(certificate.getCity()==null || certificate.getCity().equals("") || certificate.getName()==null || certificate.getName().equals("")){
             returnValue = false;
         }
 
         // provjera datuma
-        Certificate issuer = certificateRepository.findOneBySerialNumberIssuer(certificate.getSerialNumberIssuer());
-        if(issuer.getEndDate().compareTo(certificate.getEndDate()) < 0 ){
-            returnValue = false;
-        }
 
+        Certificate issuer = certificateRepository.findOneBySerialNumberSubject(certificate.getSerialNumberIssuer());
+        if(issuer!= null){
+            if(issuer.getEndDate().compareTo(certificate.getEndDate()) < 0 ){
+                returnValue = false;
+            }
+        }
         System.out.println("Da li je CA:   " + certificate.isCa());
         return returnValue;
     }

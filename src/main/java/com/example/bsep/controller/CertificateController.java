@@ -55,11 +55,7 @@ public class CertificateController {
         //  User user = userService.findOneByEmail(email);
         // if (user != null) {
         List<CertificateDTO>retValue = certificateService.getAllCaCertificates();
-        if (retValue.size() > 0) {
             return new ResponseEntity<>(retValue, HttpStatus.OK);
-        }
-        // }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping(value = "/getAllNonCaCertificates")
