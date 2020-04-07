@@ -13,14 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
+import java.security.*;
+import java.security.cert.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -84,7 +78,7 @@ public class CertificateService {
 
         // provjera datuma
         Certificate issuer = certificateRepository.findOneBySerialNumberIssuer(certificate.getSerialNumberIssuer());
-        if(issuer.getEndDate().compareTo(certificate.getEndDate()) < 0 ){
+        if (issuer.getEndDate().compareTo(certificate.getEndDate()) < 0) {
             returnValue = false;
         }
 
@@ -265,7 +259,7 @@ public class CertificateService {
     }
 
     private java.security.cert.Certificate findFromFile(String serialNumber, boolean isCA) {
-        String keyStoreFile = isCA ? "ks/ksCA.jks" : "ks/ksnonCA.jks" ;
+        String keyStoreFile = isCA ? "ks/ksCA.jks" : "ks/nonCA_KS.jks" ;
         return keyStoreReader.readCertificate(keyStoreFile, "sifra1", serialNumber);
     }
 
@@ -292,5 +286,44 @@ public class CertificateService {
         return file;
     }
 
+    public boolean isValid(String alias){
+        boolean ret = true;
+        // ret = isRevoked(certificate)
+        if(ret){
+            return checkValidity(alias);
+        }
+        else {
+            return false;
+        }
+    }
 
+    private boolean checkValidity(String alias){
+        Certificate cert = certificateRepository.findOneBySerialNumberSubject(alias);
+        X509Certificate cer = (X509Certificate)findFromFile(alias, cert.isCa());
+        if(cer.getSigAlgName().equals("SHA-1")){
+            return false;
+        }
+        try {
+            cer.verify(cer.getPublicKey());
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
+            e.printStackTrace();
+            return false;
+        }
+        try {
+            cer.checkValidity();
+        } catch (CertificateExpiredException | CertificateNotYetValidException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if(!cert.isCa()){
+            return false;
+        }
+        if(cert.getSerialNumberSubject().equals(cert.getSerialNumberIssuer())){
+            return true;
+        }
+        else{
+            return checkValidity(cert.getSerialNumberIssuer());
+        }
+    }
 }
