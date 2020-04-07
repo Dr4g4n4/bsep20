@@ -13,6 +13,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Enumeration;
 
 import com.example.bsep.data.IssuerData;
@@ -141,5 +142,33 @@ public class KeyStoreReader {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public ArrayList<Certificate> readAllCertificates(String keyStoreFile, String keyStorePass) {
+        KeyStore ks = null;
+        ArrayList<Certificate> certs = new ArrayList<>(50);
+        try {
+            ks = KeyStore.getInstance("JKS", "SUN");
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(ResourceUtils.getFile("classpath:"+keyStoreFile)));
+            ks.load(in, keyStorePass.toCharArray());
+            Enumeration<String> es = ks.aliases();
+            String alias = "";
+            while (es.hasMoreElements()) {
+                alias = (String) es.nextElement();
+                Certificate c = ks.getCertificate(alias);
+                certs.add(c);
+            }
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+            return certs;
     }
 }

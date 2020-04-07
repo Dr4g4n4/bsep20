@@ -2,6 +2,7 @@ package com.example.bsep.controller;
 
 import com.example.bsep.certificates.CertificateReader;
 import com.example.bsep.dto.CertificateDTO;
+import com.example.bsep.dto.RevocationDetails;
 import com.example.bsep.keystores.KeyStoreWriter;
 import com.example.bsep.model.Certificate;
 import com.example.bsep.service.CertificateService;
@@ -125,9 +126,13 @@ public class CertificateController {
 
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/revokeCertificate/{id}")
-    public void revokeCertificate(@PathVariable String id){
-
+    @RequestMapping(method = RequestMethod.POST, consumes="application/json", value = "/revokeCertificate")
+    public ResponseEntity<ResponseEntity> revokeCertificate(@RequestBody RevocationDetails details){
+            if (certificateService.revokeCertificate(details)) {
+                return new ResponseEntity<>(HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+            }
     }
 
 }

@@ -58,7 +58,7 @@ public class Certificate {
     private String revocationReason;        // only set if cert is revoked
 
     @Column(name = "revocation_timestamp", nullable = true)
-    private Timestamp revocationTimestamp;  // when cert is revoked
+    private String revocationTimestamp;  // when cert is revoked
 
     public Certificate(){
 
@@ -199,11 +199,11 @@ public class Certificate {
         this.revocationReason = revocationReason;
     }
 
-    public Timestamp getRevocationTimestamp() {
+    public String getRevocationTimestamp() {
         return revocationTimestamp;
     }
 
-    public void setRevocationTimestamp(Timestamp revocationTimestamp) {
+    public void setRevocationTimestamp(String revocationTimestamp) {
         this.revocationTimestamp = revocationTimestamp;
     }
 }
