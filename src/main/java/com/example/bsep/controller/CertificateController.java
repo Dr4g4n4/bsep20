@@ -16,7 +16,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.util.List;
 
 @RestController
@@ -116,6 +121,12 @@ public class CertificateController {
             e.printStackTrace();
         }
 
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/validate/{serialNumber}")
+    public ResponseEntity<Boolean> validateCertificate(@PathVariable String serialNumber){
+        boolean ret = certificateService.isValid(serialNumber);
+        return new ResponseEntity<>(ret, HttpStatus.OK);
     }
 
 }
