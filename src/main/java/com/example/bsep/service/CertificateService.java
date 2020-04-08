@@ -101,7 +101,7 @@ public class CertificateService {
         List<Certificate> all = certificateRepository.findAllByCa(true);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
-            if((!c.isRevoked()) && (c.isCa()) && isValid(c.getSerialNumberSubject()))
+            if(isValid(c.getSerialNumberSubject()))
             retValue.add(new CertificateDTO(c));
         }
         return retValue;

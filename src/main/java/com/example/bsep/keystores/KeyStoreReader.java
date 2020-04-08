@@ -52,7 +52,7 @@ public class KeyStoreReader {
     public IssuerData readIssuerFromStore(String keyStoreFile, String alias, char[] password, char[] keyPass) {
         try {
             //Datoteka se ucitava
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(ResourceUtils.getFile("classpath:"+keyStoreFile)));
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(Paths.get(ResourceUtils.getFile("classpath:")+"\\..\\..\\src\\main\\resources").toRealPath().toString() + "\\" + keyStoreFile));
             keyStore.load(in, password);
             //Iscitava se sertifikat koji ima dati alias
             Certificate cert = keyStore.getCertificate(alias);
@@ -117,7 +117,7 @@ public class KeyStoreReader {
             //kreiramo instancu KeyStore
             KeyStore ks = KeyStore.getInstance("JKS", "SUN");
             //ucitavamo podatke
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(ResourceUtils.getFile("classpath:"+keyStoreFile)));
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(Paths.get(ResourceUtils.getFile("classpath:")+"\\..\\..\\src\\main\\resources").toRealPath().toString() + "\\" + keyStoreFile));
             ks.load(in, keyStorePass.toCharArray());
 
             if(ks.isKeyEntry(alias)) {
