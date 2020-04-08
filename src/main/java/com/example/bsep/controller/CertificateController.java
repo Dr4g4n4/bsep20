@@ -71,12 +71,12 @@ public class CertificateController {
         //  User user = userService.findOneByEmail(email);
         // if (user != null) {
         List<CertificateDTO>retValue = certificateService.getAllNoCaCertificates();
-        if (retValue.size() > 0) {
+        //if (retValue.size() > 0) {
             return new ResponseEntity<>(retValue, HttpStatus.OK);
         }
         // }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    }
+       // return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    //}
 
     @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createSelf/{isCa}")
     public ResponseEntity<ResponseEntity>  createCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
@@ -86,7 +86,7 @@ public class CertificateController {
             return new ResponseEntity<>(HttpStatus.OK);
         }
         else{
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }
 
@@ -97,7 +97,7 @@ public class CertificateController {
             return new ResponseEntity<>(HttpStatus.OK);
         }
         else{
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }
 
