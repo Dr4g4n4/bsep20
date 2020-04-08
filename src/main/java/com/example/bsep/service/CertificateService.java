@@ -138,7 +138,6 @@ public class CertificateService {
     public boolean createSelfSignedCertificate(Certificate certificate, boolean isCa){
         certificate.setCa(isCa);
         boolean ok = validateFileds(certificate);
-        certificateRepository.save(certificate);
         if(ok){
             Certificate cert = certificateRepository.save(certificate);
             KeyPair selfKey = getKeyPair();
@@ -154,16 +153,8 @@ public class CertificateService {
             IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
             CertificateGenerator certGenerator = new CertificateGenerator();
             X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
-            String keyStoreFile = "ks/"+certificate.getCity() + "_" + certificate.getEmail() + ".jks";
 
-            // generisanje keyStore
-            KeyStoreWriter keyStoreW = new KeyStoreWriter();
-            keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
-            System.out.println("Serijski broj za prvo:  " + subjectData.getSerialNumber());
-            keyStoreW.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
-            keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
-
-            keyStoreFile = "ks/ksCA.jks";
+            String keyStoreFile = "ks/ksCA.jks";
             KeyStoreWriter kw = new KeyStoreWriter();
             kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
             kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
