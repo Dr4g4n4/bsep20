@@ -293,11 +293,12 @@ public class CertificateService {
     private boolean checkValidity(String alias){
         Certificate cert = certificateRepository.findOneBySerialNumberSubject(alias);
         X509Certificate cer = (X509Certificate)findFromFile(alias, cert.isCa());
+        X509Certificate cerIssuer = (X509Certificate)findFromFile(cert.getSerialNumberIssuer(), cert.isCa());
         if(cer.getSigAlgName().equals("SHA-1")){
             return false;
         }
         try {
-            cer.verify(cer.getPublicKey());
+            cer.verify(cerIssuer.getPublicKey());
         } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
             e.printStackTrace();
             return false;
