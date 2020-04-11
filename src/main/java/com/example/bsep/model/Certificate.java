@@ -3,7 +3,9 @@ package com.example.bsep.model;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 public class Certificate {
@@ -32,9 +34,6 @@ public class Certificate {
     @Column(name = "revoked", nullable = false)
     private boolean revoked;
 
-    @Column(name = "purpose", nullable = false)
-    private String purpose;
-
     @Column(name = "city", nullable = false)
     private String city;
 
@@ -47,8 +46,10 @@ public class Certificate {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "extension", nullable = false)
-    private String extension;
+    @Transient
+    private ArrayList<Integer> keyUsage;
+    @Transient
+    private ArrayList<String> extendedKeyUsage;
 
     public Certificate(){
 
@@ -62,12 +63,15 @@ public class Certificate {
         this.endDate = endDate;
         this.ca = isCA;
         this.revoked = false;
-        this.purpose = purpose;
+
         this.city = city;
         this.name = name;
         this.surname = surname;
         this.email = email;
-        this.extension = extension;
+
+
+        this.keyUsage = new ArrayList<Integer>();
+        this.extendedKeyUsage = new ArrayList<String>();
     }
 
     public String getSerialNumberSubject(){
@@ -118,14 +122,6 @@ public class Certificate {
         this.serialNumberIssuer = serialNumberIssuer;
     }
 
-    public String getPurpose(){
-        return this.purpose;
-    }
-
-    public void setPurpose(String purpose){
-        this.purpose = purpose;
-    }
-
     public String getCity(){  return this.city; }
 
     public void setCity(String city){
@@ -150,15 +146,24 @@ public class Certificate {
         this.email = email;
     }
 
-    public String getExtension(){
-        return this.extension;
-    }
-
-    public void setExtension(String extension){
-        this.extension = extension;
-    }
 
     public Long getId() { return id; }
 
     public void setId(Long id) { this.id = id; }
+
+    public ArrayList<Integer> getKeyUsage() {
+        return keyUsage;
+    }
+
+    public void setKeyUsage(ArrayList<Integer> keyUsage) {
+        this.keyUsage = keyUsage;
+    }
+
+    public ArrayList<String> getExtendedKeyUsage() {
+        return extendedKeyUsage;
+    }
+
+    public void setExtendedKeyUsage(ArrayList<String> extendedKeyUsage) {
+        this.extendedKeyUsage = extendedKeyUsage;
+    }
 }
