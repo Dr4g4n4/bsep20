@@ -287,7 +287,7 @@ public class CertificateService {
 
         if (baseCertificate.isCa()) {       // ucitati sve i povuci sve ispod ovog
             ArrayList<java.security.cert.Certificate> allCACertificates = revokeTheOnesBelow(baseCertificate.getSerialNumberSubject(), "ks/ksCA.jks");
-            ArrayList<java.security.cert.Certificate> allEECertificates = keyStoreReader.readAllCertificates("ks/ksnonCA.jks", "sifra1");
+            ArrayList<java.security.cert.Certificate> allEECertificates = keyStoreReader.readAllCertificates("ks/nonCA_KS.jks", "sifra1");
 
             for (java.security.cert.Certificate ee : allEECertificates) {   // povlacenje malih
                 for ( java.security.cert.Certificate ca :  allCACertificates) {
@@ -308,6 +308,7 @@ public class CertificateService {
 
     private Certificate revokeOne(String serialNumber, RevocationDetails details) {
         Certificate baseCertificate = certificateRepository.findOneBySerialNumberSubject(serialNumber);
+
         baseCertificate.setRevoked(true);
         baseCertificate.setRevocationReason(details.getRevocationReason());
         baseCertificate.setRevocationTimestamp(details.getRevocationTimestamp());
@@ -347,6 +348,10 @@ public class CertificateService {
             e.printStackTrace();
         }
         return certs;
+    }
+
+    public List<Certificate> revokedCertificates(boolean isCA) {
+        return certificateRepository.findAllByCa(isCA);
     }
 
 }

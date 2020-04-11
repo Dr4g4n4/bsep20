@@ -4,10 +4,14 @@ import com.example.bsep.certificates.CertificateReader;
 import com.example.bsep.dto.CertificateDTO;
 import com.example.bsep.dto.RevocationDetails;
 import com.example.bsep.keystores.KeyStoreWriter;
+import com.example.bsep.model.Admin;
 import com.example.bsep.model.Certificate;
+import com.example.bsep.security.TokenUtils;
+import com.example.bsep.service.AdminService;
 import com.example.bsep.service.CertificateService;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.ParameterResolutionDelegate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +23,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.cert.CertificateEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -30,6 +35,12 @@ public class CertificateController {
 
     @Autowired
     private CertificateReader certificateReader;
+
+    @Autowired
+    private AdminService adminService;
+
+    @Autowired
+    private TokenUtils tokenUtils;
 
     @RequestMapping(method=RequestMethod.GET, value = "/getAllCertificates")
     public ResponseEntity<List<CertificateDTO>> getAllCerts() {
@@ -127,13 +138,36 @@ public class CertificateController {
     }
 
     @RequestMapping(method = RequestMethod.POST, consumes="application/json", value = "/revokeCertificate")
-    public ResponseEntity<ResponseEntity> revokeCertificate(@RequestBody RevocationDetails details){
-            if (certificateService.revokeCertificate(details)) {
+    public ResponseEntity<ResponseEntity> revokeCertificate(@RequestBody RevocationDetails details, HttpServletRequest request){
+        String token = tokenUtils.getToken(request);
+        String username = tokenUtils.getUsernameFromToken(token);
+        Admin user = adminService.findOneByUserName(username);
+        if (user != null) {
+            CertificateDTO toRevoke = certificateService.getCertificate(details.getSerialNumberSubject());
+            if (toRevoke.isRevoked())   {
+                return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+            } else if (certificateService.revokeCertificate(details)) {
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
             }
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        }
     }
+
+    @RequestMapping(method = RequestMethod.GET, produces="application/json", value = "/{isCA}")
+    public List<Certificate> revokedCertificates(@PathVariable boolean isCA, HttpServletResponse response){
+        ArrayList<Certificate> revoked = (ArrayList<Certificate>) certificateService.revokedCertificates(isCA);
+        if (revoked.isEmpty() || revoked == null) {
+            revoked = new ArrayList<Certificate>();
+            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+        } else {
+            response.setStatus(HttpServletResponse.SC_OK);
+        }
+        return revoked;
+    }
+
 
 }
 
