@@ -45,7 +45,7 @@ public class Certificate {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "surname", nullable = false)
+    @Column(name = "surname", nullable = true)
     private String surname;
 
     @Column(name = "email", nullable = false, unique = true)
@@ -81,8 +81,8 @@ public class Certificate {
     }
 
     public Certificate(CertificateDTO c) {
-        this.serialNumberSubject = c.getSerialNumbeSubejctr();
-        this.serialNumberIssuer = c.getSerialNumberIssuerr();
+        this.serialNumberSubject = c.getSerialNumberSubject();
+        this.serialNumberIssuer = c.getSerialNumberIssuer();
         try {
             this.startDate = new SimpleDateFormat("yyyy/MM/dd hh:hh").parse(c.getStartDate());
             this.endDate = new SimpleDateFormat("yyyy/MM/dd hh:hh").parse(c.getEndDate());
