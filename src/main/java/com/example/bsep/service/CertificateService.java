@@ -396,7 +396,7 @@ public class CertificateService {
 
     public boolean isRevoked(String alias) {
         CertificateDTO c = getCertificate(alias);
-        // TO DO: dodaj oscp req koji gadja ovu metodu
+        // TO DO: dodaj oscp request koji gadja ovu metodu
         return !c.isRevoked();
     }
 }
