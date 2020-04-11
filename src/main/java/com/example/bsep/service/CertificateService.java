@@ -7,18 +7,18 @@ import com.example.bsep.dto.CertificateDTO;
 import com.example.bsep.dto.RevocationDetails;
 import com.example.bsep.keystores.KeyStoreReader;
 import com.example.bsep.keystores.KeyStoreWriter;
-import com.example.bsep.model.Certificate;
 import com.example.bsep.repository.CertificateRepository;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
+import com.example.bsep.model.Certificate;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.security.*;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.*;
 import java.security.cert.*;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
 
 @Service
 public class CertificateService {
