@@ -16,6 +16,7 @@ import org.springframework.util.ResourceUtils;
 import com.example.bsep.model.Certificate;
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.*;
 
@@ -283,7 +284,7 @@ public class CertificateService {
 
     public boolean isValid(String alias){
         boolean ret = true;
-        // ret = isRevoked(certificate)
+        ret = isRevoked(alias);
         if(ret){
             return checkValidity(alias);
         }
@@ -317,7 +318,6 @@ public class CertificateService {
 
     private Certificate revokeOne(String serialNumber, RevocationDetails details) {
         Certificate baseCertificate = certificateRepository.findOneBySerialNumberSubject(serialNumber);
-
         baseCertificate.setRevoked(true);
         baseCertificate.setRevocationReason(details.getRevocationReason());
         baseCertificate.setRevocationTimestamp(details.getRevocationTimestamp());
@@ -330,7 +330,7 @@ public class CertificateService {
         ArrayList<java.security.cert.Certificate> certs = new ArrayList<>(50);
         try {
             ks = KeyStore.getInstance("JKS", "SUN");
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(ResourceUtils.getFile("classpath:"+ keystoreFile)));
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(Paths.get(ResourceUtils.getFile("classpath:")+"\\..\\..\\src\\main\\resources").toRealPath().toString() + "\\" + keystoreFile));
             ks.load(in, "sifra1".toCharArray());
             Enumeration<String> es = ks.aliases();
             String alias = "";
@@ -359,14 +359,14 @@ public class CertificateService {
         return certs;
     }
 
-    public List<Certificate> revokedCertificates(boolean isCA) {
-        return certificateRepository.findAllByCa(isCA);
+    public List<Certificate> revokedCertificates(boolean isRevoked) {
+        return certificateRepository.findAllByRevoked(isRevoked);
     }
 
     private boolean checkValidity(String alias){
         Certificate cert = certificateRepository.findOneBySerialNumberSubject(alias);
         X509Certificate cer = (X509Certificate)findFromFile(alias, cert.isCa());
-        X509Certificate cerIssuer = (X509Certificate)findFromFile(cert.getSerialNumberIssuer(), cert.isCa());
+        X509Certificate cerIssuer = (X509Certificate)findFromFile(cert.getSerialNumberIssuer(), true);
         if(cer.getSigAlgName().equals("SHA-1")){
             return false;
         }
@@ -392,5 +392,11 @@ public class CertificateService {
         else{
             return checkValidity(cert.getSerialNumberIssuer());
         }
+    }
+
+    public boolean isRevoked(String alias) {
+        CertificateDTO c = getCertificate(alias);
+        // TO DO: dodaj oscp req koji gadja ovu metodu
+        return !c.isRevoked();
     }
 }

@@ -71,7 +71,7 @@ public class Certificate {
         this.startDate = startDate;
         this.endDate = endDate;
         this.ca = isCA;
-        this.revoked = false;
+        this.revoked = isRevoked;
         this.purpose = purpose;
         this.city = city;
         this.name = name;
@@ -136,7 +136,7 @@ public class Certificate {
     }
 
     public void setRevoked(boolean revoked){
-        this.ca = revoked;
+        this.revoked = revoked;
     }
 
     public String getSerialNumberIssuer(){

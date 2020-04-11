@@ -160,9 +160,9 @@ public class CertificateController {
         }
     }
 
-    @RequestMapping(method = RequestMethod.GET, produces="application/json", value = "/{isCA}")
-    public List<Certificate> revokedCertificates(@PathVariable boolean isCA, HttpServletResponse response){
-        ArrayList<Certificate> revoked = (ArrayList<Certificate>) certificateService.revokedCertificates(isCA);
+    @RequestMapping(method = RequestMethod.GET, produces="application/json", value = "/{isRevoked}")
+    public List<Certificate> revokedCertificates(@PathVariable boolean isRevoked, HttpServletResponse response){
+        ArrayList<Certificate> revoked = (ArrayList<Certificate>) certificateService.revokedCertificates(isRevoked);
         if (revoked.isEmpty() || revoked == null) {
             revoked = new ArrayList<Certificate>();
             response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);

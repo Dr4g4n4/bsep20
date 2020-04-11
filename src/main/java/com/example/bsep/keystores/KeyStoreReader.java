@@ -148,7 +148,7 @@ public class KeyStoreReader {
         ArrayList<Certificate> certs = new ArrayList<>(50);
         try {
             ks = KeyStore.getInstance("JKS", "SUN");
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(ResourceUtils.getFile("classpath:"+keyStoreFile)));
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(Paths.get(ResourceUtils.getFile("classpath:")+"\\..\\..\\src\\main\\resources").toRealPath().toString() + "\\" + keyStoreFile));
             ks.load(in, keyStorePass.toCharArray());
             Enumeration<String> es = ks.aliases();
             String alias = "";
