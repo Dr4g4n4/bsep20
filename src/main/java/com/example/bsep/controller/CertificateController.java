@@ -16,13 +16,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import javax.ws.rs.core.Response;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,11 +72,7 @@ public class CertificateController {
         //  User user = userService.findOneByEmail(email);
         // if (user != null) {
         List<CertificateDTO>retValue = certificateService.getAllCaCertificates();
-        if (retValue.size() > 0) {
             return new ResponseEntity<>(retValue, HttpStatus.OK);
-        }
-        // }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping(value = "/getAllNonCaCertificates")
@@ -83,35 +83,33 @@ public class CertificateController {
         //  User user = userService.findOneByEmail(email);
         // if (user != null) {
         List<CertificateDTO>retValue = certificateService.getAllNoCaCertificates();
-        if (retValue.size() > 0) {
+        //if (retValue.size() > 0) {
             return new ResponseEntity<>(retValue, HttpStatus.OK);
         }
         // }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    }
+       // return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    //}
 
     @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createSelf/{isCa}")
-    public void  createCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
+    public ResponseEntity<ResponseEntity>  createCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
         System.out.print("Kontroler da li je CA:   " + isCa);
         boolean retValue = certificateService.createSelfSignedCertificate(certificate, isCa);
-// ResponseEntity<ResponseEntity>
-     /*   if(retValue){
+        if(retValue){
             return new ResponseEntity<>(HttpStatus.OK);
         }
         else{
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }*/
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
     }
 
     @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createNoSelf/{isCa}")
     public ResponseEntity<ResponseEntity> createNoCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
         boolean retValue = certificateService.createNonSelfSignedCertificate(certificate, isCa);
-        retValue = true;
         if(retValue){
             return new ResponseEntity<>(HttpStatus.OK);
         }
         else{
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }
 
@@ -135,6 +133,12 @@ public class CertificateController {
             e.printStackTrace();
         }
 
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/validate/{serialNumber}")
+    public ResponseEntity<Boolean> validateCertificate(@PathVariable String serialNumber){
+        boolean ret = certificateService.isValid(serialNumber);
+        return new ResponseEntity<>(ret, HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.POST, consumes="application/json", value = "/revokeCertificate")

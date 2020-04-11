@@ -38,7 +38,7 @@ public class CertificateDTO {
         this.extension = certificate.getExtension();
     }
 
-    public String getSerialNumbeSubejctr(){
+    public String getSerialNumberSubject(){
         return this.serialNumberSubject;
     }
 
@@ -78,7 +78,7 @@ public class CertificateDTO {
         this.ca = revoked;
     }
 
-    public String getSerialNumberIssuerr(){
+    public String getSerialNumberIssuer(){
         return this.serialNumberIssuer;
     }
 

@@ -17,6 +17,8 @@ import java.security.*;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.*;
+import java.security.cert.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -73,10 +75,18 @@ public class CertificateService {
             returnValue = false;
         }
 
-        if(certificate.getCity()==null || certificate.getCity().equals("") || certificate.getName()==null || certificate.getName().equals("") || certificate.getSurname() == null || certificate.getSurname().equals("")){
+        if(certificate.getCity()==null || certificate.getCity().equals("") || certificate.getName()==null || certificate.getName().equals("")){
             returnValue = false;
         }
 
+        // provjera datuma
+
+        Certificate issuer = certificateRepository.findOneBySerialNumberSubject(certificate.getSerialNumberIssuer());
+        if(issuer!= null){
+            if(issuer.getEndDate().compareTo(certificate.getEndDate()) < 0 ){
+                returnValue = false;
+            }
+        }
         System.out.println("Da li je CA:   " + certificate.isCa());
         return returnValue;
     }
@@ -94,7 +104,7 @@ public class CertificateService {
         List<Certificate> all = certificateRepository.findAllByCa(true);
         List<CertificateDTO> retValue = new ArrayList<CertificateDTO>();
         for( Certificate c : all){
-            if((!c.isRevoked()) && (c.isCa()))
+            if(isValid(c.getSerialNumberSubject()))
             retValue.add(new CertificateDTO(c));
         }
         return retValue;
@@ -131,7 +141,6 @@ public class CertificateService {
     public boolean createSelfSignedCertificate(Certificate certificate, boolean isCa){
         certificate.setCa(isCa);
         boolean ok = validateFileds(certificate);
-        certificateRepository.save(certificate);
         if(ok){
             Certificate cert = certificateRepository.save(certificate);
             KeyPair selfKey = getKeyPair();
@@ -148,16 +157,7 @@ public class CertificateService {
             CertificateGenerator certGenerator = new CertificateGenerator();
             X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData);
 
-            String keyStoreFile = "ks/"+certificate.getCity() + "_" + certificate.getEmail() + ".jks";
-
-            // generisanje keyStore
-            KeyStoreWriter keyStoreW = new KeyStoreWriter();
-            keyStoreW.loadKeyStore(null, "sifra1".toCharArray());
-            System.out.println("Serijski broj za prvo:  " + subjectData.getSerialNumber());
-            keyStoreW.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
-            keyStoreW.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
-
-            keyStoreFile = "ks/ksCA.jks";
+            String keyStoreFile = "ks/ksCA.jks";
             KeyStoreWriter kw = new KeyStoreWriter();
             kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
             kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
@@ -244,7 +244,7 @@ public class CertificateService {
 
     public File downloadCertificate(Long id) {
         CertificateDTO wantedCertificate = getCertificate(id);
-        java.security.cert.Certificate c = findFromFile(wantedCertificate.getSerialNumbeSubejctr(), wantedCertificate.isCa());
+        java.security.cert.Certificate c = findFromFile(wantedCertificate.getSerialNumberSubject(), wantedCertificate.isCa());
         File downloadFile  = writeCertificate(c);
         try {
             FileInputStream inStream = new FileInputStream(downloadFile);
@@ -255,7 +255,7 @@ public class CertificateService {
     }
 
     private java.security.cert.Certificate findFromFile(String serialNumber, boolean isCA) {
-        String keyStoreFile = isCA ? "ks/ksCA.jks" : "ks/ksnonCA.jks" ;
+        String keyStoreFile = isCA ? "ks/ksCA.jks" : "ks/nonCA_KS.jks" ;
         return keyStoreReader.readCertificate(keyStoreFile, "sifra1", serialNumber);
     }
 
@@ -282,6 +282,16 @@ public class CertificateService {
         return file;
     }
 
+    public boolean isValid(String alias){
+        boolean ret = true;
+        // ret = isRevoked(certificate)
+        if(ret){
+            return checkValidity(alias);
+        }
+        else {
+            return false;
+        }
+    }
     public boolean revokeCertificate(RevocationDetails details) {
           Certificate baseCertificate = revokeOne(details.getSerialNumberSubject(), details);     // ako nije ca, ovde je zavrsen posao
 
@@ -354,4 +364,34 @@ public class CertificateService {
         return certificateRepository.findAllByCa(isCA);
     }
 
+    private boolean checkValidity(String alias){
+        Certificate cert = certificateRepository.findOneBySerialNumberSubject(alias);
+        X509Certificate cer = (X509Certificate)findFromFile(alias, cert.isCa());
+        X509Certificate cerIssuer = (X509Certificate)findFromFile(cert.getSerialNumberIssuer(), cert.isCa());
+        if(cer.getSigAlgName().equals("SHA-1")){
+            return false;
+        }
+        try {
+            cer.verify(cerIssuer.getPublicKey());
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException | SignatureException e) {
+            e.printStackTrace();
+            return false;
+        }
+        try {
+            cer.checkValidity();
+        } catch (CertificateExpiredException | CertificateNotYetValidException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if(!cert.isCa()){
+            return false;
+        }
+        if(cert.getSerialNumberSubject().equals(cert.getSerialNumberIssuer())){
+            return true;
+        }
+        else{
+            return checkValidity(cert.getSerialNumberIssuer());
+        }
+    }
 }
