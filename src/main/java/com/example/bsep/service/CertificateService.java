@@ -152,7 +152,7 @@ public class CertificateService {
 
             IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
             CertificateGenerator certGenerator = new CertificateGenerator();
-            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData,certificate.getKeyUsage());
+            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData,certificate.getKeyUsage(),certificate.getExtendedKeyUsage());
 
             String keyStoreFile = "ks/ksCA.jks";
             KeyStoreWriter kw = new KeyStoreWriter();
@@ -177,7 +177,7 @@ public class CertificateService {
             KeyPair subjectKey = getKeyPair();
             SubjectData subjectData = getSubjectData(newCertificate,subjectKey.getPublic());
             CertificateGenerator certGenerator = new CertificateGenerator();
-            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData,certificate.getKeyUsage());
+            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData,certificate.getKeyUsage(),certificate.getExtendedKeyUsage());
             String keyStoreFile = "";
 
             if(certificate.isCa()) {
