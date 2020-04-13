@@ -2,6 +2,9 @@ package com.example.bsep.dto;
 
 import com.example.bsep.model.Certificate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CertificateDTO {
 
     private  Long id;
@@ -11,12 +14,13 @@ public class CertificateDTO {
     private String endDate;
     private boolean ca;
     private boolean revoked;
-    private String purpose;
+
     private String city;
     private String name;
     private String surname;
     private String email;
-    private String extension;
+    private ArrayList<String> keyUsage;
+    private ArrayList<String> extendedKeyUsage;
 
     public CertificateDTO(){
 
@@ -30,12 +34,10 @@ public class CertificateDTO {
         this.endDate = certificate.getEndDate().toString();
         this.ca = certificate.isCa();
         this.revoked = certificate.isRevoked();
-        this.purpose = certificate.getPurpose();
         this.city = certificate.getCity();
         this.name = certificate.getName();
         this.surname = certificate.getSurname();
         this.email = certificate.getEmail();
-        this.extension = certificate.getExtension();
     }
 
     public String getSerialNumberSubject(){
@@ -86,13 +88,7 @@ public class CertificateDTO {
         this.serialNumberIssuer = serialNumberIssuer;
     }
 
-    public String getPurpose(){
-        return this.purpose;
-    }
 
-    public void setPurpose(String purpose){
-        this.purpose = purpose;
-    }
 
     public String getCity(){
         return this.city;
@@ -120,14 +116,26 @@ public class CertificateDTO {
         this.email = email;
     }
 
-    public String getExtension(){  return this.extension; }
 
-    public void setExtension(String extension){
-        this.extension = extension;
-    }
 
     public void setId(Long id) { this.id = id; }
 
     public Long getId() { return id; }
+
+    public ArrayList<String> getKeyUsage() {
+        return keyUsage;
+    }
+
+    public void setKeyUsage(ArrayList<String> keyUsage) {
+        this.keyUsage = keyUsage;
+    }
+
+    public ArrayList<String> getExtendedKeyUsage() {
+        return extendedKeyUsage;
+    }
+
+    public void setExtendedKeyUsage(ArrayList<String> extendedKeyUsage) {
+        this.extendedKeyUsage = extendedKeyUsage;
+    }
 }
 
