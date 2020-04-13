@@ -20,10 +20,7 @@ import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.*;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -160,7 +157,7 @@ public class CertificateService {
             String keyStoreFile = "ks/ksCA.jks";
             KeyStoreWriter kw = new KeyStoreWriter();
             kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
-            kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), certX509);
+            kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), new java.security.cert.Certificate[]{certX509});
             kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
             return true;
         }
@@ -191,14 +188,29 @@ public class CertificateService {
             }
 
             KeyStoreWriter kw = new KeyStoreWriter();
-            kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
-            kw.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), "sifra1".toCharArray(), certX509);
+            java.security.cert.Certificate[] chain = addToChain(keyStoreFile, isCa, kw, certificate.getSerialNumberIssuer(), certX509);
+            kw.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), "sifra1".toCharArray(), chain);
             kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
             return true;
         }
         else{
             return false;
         }
+    }
+
+    private java.security.cert.Certificate[] addToChain(String keyStoreFile, boolean isCA, KeyStoreWriter kw, String serialNumber, X509Certificate newCert){
+        java.security.cert.Certificate[] ret = new java.security.cert.Certificate[1];
+        kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
+        if (isCA) {
+            java.security.cert.Certificate[] chain = kw.getChain(serialNumber);     // issuer's chain
+            ArrayList<java.security.cert.Certificate> convertedArray = new ArrayList<java.security.cert.Certificate>(Arrays.asList(chain));
+            convertedArray.add(newCert);
+            ret = convertedArray.toArray(chain);
+        } else {
+            ret[0] = newCert;
+        }
+
+        return ret;
     }
 
     private SubjectData getSubjectData(Certificate certificate, PublicKey pk) {
@@ -336,8 +348,9 @@ public class CertificateService {
             String alias = "";
             while (es.hasMoreElements()) {
                 alias = (String) es.nextElement();
-                java.security.cert.Certificate c = ks.getCertificate(alias);
                 java.security.cert.Certificate[] chain = ks.getCertificateChain(alias);
+                java.security.cert.Certificate c = chain[chain.length-1];
+
                 for (int i = 0; i < chain.length; i++) {
                     if (((X509Certificate)chain[i]).getSerialNumber().toString().equals(serialNumber)) {
                         certs.add(c);

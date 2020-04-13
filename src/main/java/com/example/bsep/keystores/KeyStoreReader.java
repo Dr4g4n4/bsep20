@@ -56,7 +56,9 @@ public class KeyStoreReader {
             BufferedInputStream in = new BufferedInputStream(new FileInputStream(Paths.get(ResourceUtils.getFile("classpath:")+"\\..\\..\\src\\main\\resources").toRealPath().toString() + "\\" + keyStoreFile));
             keyStore.load(in, password);
             //Iscitava se sertifikat koji ima dati alias
-            Certificate cert = keyStore.getCertificate(alias);
+            Certificate[] chain = keyStore.getCertificateChain(alias);
+            Certificate cert = chain[chain.length-1];
+            //Certificate cert = keyStore.getCertificate(alias);
             //Iscitava se privatni kljuc vezan za javni kljuc koji se nalazi na sertifikatu sa datim aliasom
             PrivateKey privKey = (PrivateKey) keyStore.getKey(alias, keyPass);
             X500Name issuerName = new JcaX509CertificateHolder((X509Certificate) cert).getSubject();
@@ -90,7 +92,9 @@ public class KeyStoreReader {
             ks.load(in, keyStorePass.toCharArray());
 
             if(ks.isKeyEntry(alias)) {
-                Certificate cert = ks.getCertificate(alias);
+                Certificate[] chain = ks.getCertificateChain(alias);
+                Certificate cert = chain[chain.length-1];
+                //Certificate cert = ks.getCertificate(alias);
                 return cert;
             }
         } catch (KeyStoreException e) {
@@ -154,7 +158,9 @@ public class KeyStoreReader {
             String alias = "";
             while (es.hasMoreElements()) {
                 alias = (String) es.nextElement();
-                Certificate c = ks.getCertificate(alias);
+                Certificate[] chain = ks.getCertificateChain(alias);
+                Certificate c = chain[chain.length-1];
+                //Certificate c = ks.getCertificate(alias);
                 certs.add(c);
             }
         } catch (KeyStoreException e) {
