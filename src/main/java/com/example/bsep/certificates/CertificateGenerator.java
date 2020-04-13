@@ -24,7 +24,7 @@ public class CertificateGenerator {
 
     public CertificateGenerator() {}
 
-    public X509Certificate generateCertificate(SubjectData subjectData, IssuerData issuerData,ArrayList<Integer> keyUsage,ArrayList<String> extendedKeyUsage) {
+    public X509Certificate generateCertificate(SubjectData subjectData, IssuerData issuerData,ArrayList<Integer> keyUsage,ArrayList<String> extendedKeyUsage,boolean isCa) {
         try {
             JcaContentSignerBuilder builder = new JcaContentSignerBuilder("SHA256WithRSAEncryption");
             builder = builder.setProvider("BC");
@@ -35,6 +35,8 @@ public class CertificateGenerator {
                     subjectData.getEndDate(),
                     subjectData.getX500name(),
                     subjectData.getPublicKey());
+
+            certGen.addExtension(Extension.basicConstraints,true,new BasicConstraints(isCa));
 
             int ret = getParams(keyUsage);
             if(ret != 0) {
@@ -97,6 +99,7 @@ public class CertificateGenerator {
 
         if(extendedKeyUsage.contains("ipsec"))
             ids.add(KeyPurposeId.getInstance(KeyPurposeId.id_kp_ipsecUser));
+
 
         KeyPurposeId[] arr = new KeyPurposeId[ids.size()];
         ids.toArray(arr);
