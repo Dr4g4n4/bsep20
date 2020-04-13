@@ -1,5 +1,6 @@
 package com.example.bsep.model;
 
+import com.example.bsep.dto.CertificateDTO;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -77,7 +78,6 @@ public class Certificate {
         this.surname = surname;
         this.email = email;
 
-
         this.keyUsage = new ArrayList<Integer>();
         this.extendedKeyUsage = new ArrayList<String>();
     }
@@ -93,12 +93,10 @@ public class Certificate {
         }
         this.ca = c.isCa();
         this.revoked = c.isRevoked();
-        this.purpose = c.getPurpose();
         this.city = c.getCity();
         this.name = c.getName();
         this.surname = c.getSurname();
         this.email = c.getEmail();
-        this.extension = c.getExtension();      // ovo promeniti kad se urade extenzije
     }
 
     public String getSerialNumberSubject(){

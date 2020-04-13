@@ -415,7 +415,7 @@ public class CertificateService {
     }
 
     public boolean isRevoked(String alias) {
-        CertificateDTO cert = new CertificateDTO();
+        CertificateDTO cert = getCertificate(alias);
         String keyStoreFile = cert.isCa() ? "ks/ksCA.jks" : "ks/nonCA_KS.jks" ;
         ArrayList<java.security.cert.Certificate> certsToCheck = keyStoreReader.readCertificateChain(keyStoreFile, "sifra1", alias);
 
@@ -450,7 +450,7 @@ public class CertificateService {
             }
 
         }
-        OCSPResp response = Revocation.generateOCSPResponse(respBuilder, respCertificate);
+        OCSPResp response = revocation.generateOCSPResponse(respBuilder, respCertificate);
 
         return response.getEncoded();
     }
