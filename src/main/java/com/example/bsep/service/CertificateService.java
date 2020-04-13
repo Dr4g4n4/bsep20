@@ -376,8 +376,9 @@ public class CertificateService {
         return certificateRepository.findAllByRevoked(isRevoked);
     }
 
-    private boolean checkValidity(String alias){
+private boolean checkValidity(String alias){
         Certificate cert = certificateRepository.findOneBySerialNumberSubject(alias);
+        Certificate certIssuer = certificateRepository.findOneBySerialNumberSubject(cert.getSerialNumberIssuer());
         X509Certificate cer = (X509Certificate)findFromFile(alias, cert.isCa());
         X509Certificate cerIssuer = (X509Certificate)findFromFile(cert.getSerialNumberIssuer(), true);
         if(cer.getSigAlgName().equals("SHA-1")){
@@ -396,7 +397,7 @@ public class CertificateService {
             return false;
         }
 
-        if(!cert.isCa()){
+        if(!certIssuer.isCa()){
             return false;
         }
         if(cert.getSerialNumberSubject().equals(cert.getSerialNumberIssuer())){
