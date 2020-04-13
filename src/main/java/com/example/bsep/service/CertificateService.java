@@ -10,16 +10,20 @@ import com.example.bsep.keystores.KeyStoreWriter;
 import com.example.bsep.repository.CertificateRepository;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.cert.ocsp.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 import com.example.bsep.model.Certificate;
 import java.io.*;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.*;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -38,6 +42,8 @@ public class CertificateService {
 
     @Autowired
     KeyStoreReader keyStoreReader;
+
+    private Revocation revocation;
 
     public boolean validateFileds(Certificate certificate){
         boolean returnValue = true;
@@ -376,7 +382,7 @@ public class CertificateService {
         return certificateRepository.findAllByRevoked(isRevoked);
     }
 
-private boolean checkValidity(String alias){
+    private boolean checkValidity(String alias){
         Certificate cert = certificateRepository.findOneBySerialNumberSubject(alias);
         Certificate certIssuer = certificateRepository.findOneBySerialNumberSubject(cert.getSerialNumberIssuer());
         X509Certificate cer = (X509Certificate)findFromFile(alias, cert.isCa());
@@ -409,8 +415,49 @@ private boolean checkValidity(String alias){
     }
 
     public boolean isRevoked(String alias) {
-        CertificateDTO c = getCertificate(alias);
-        // TO DO: dodaj oscp request koji gadja ovu metodu
-        return !c.isRevoked();
+        CertificateDTO cert = new CertificateDTO();
+        String keyStoreFile = cert.isCa() ? "ks/ksCA.jks" : "ks/nonCA_KS.jks" ;
+        ArrayList<java.security.cert.Certificate> certsToCheck = keyStoreReader.readCertificateChain(keyStoreFile, "sifra1", alias);
+
+        for (java.security.cert.Certificate c : certsToCheck) {
+            cert = getCertificate(((X509Certificate)c).getSerialNumber().toString());
+            if ( cert.isRevoked() ) {
+                return false;           // cim je jedan u lancu povucen, ne valja sert
+            }
+        }
+        return true;        // lanac je ispravan
+    }
+
+    public byte[] handleOCSP(byte[] input, String certAlias) throws IOException {
+        OCSPReq ocspreq = new OCSPReq(input);
+        BasicOCSPRespBuilder respBuilder = revocation.initOCSPRespBuilder(ocspreq, getPublicKey(certAlias));
+        Req[] requests = ocspreq.getRequestList();
+        java.security.cert.Certificate respCertificate = null;
+        for (Req req : requests) {
+            Certificate cert = new Certificate(getCertificate(certAlias));
+            respCertificate = findFromFile(certAlias, cert.isCa());
+            if (cert == null) {
+                respBuilder.addResponse(req.getCertID(), new UnknownStatus());
+            } else if (!isRevoked(certAlias)) {  // Check if certificate has been revoked
+                try {
+                    Date revokedDate = new SimpleDateFormat("dd/MM/yyyy hh:mm").parse(cert.getRevocationTimestamp());
+                    respBuilder.addResponse(req.getCertID(), new RevokedStatus(revokedDate , revocation.getCodeFormString(cert.getRevocationReason())));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                respBuilder.addResponse(req.getCertID(), CertificateStatus.GOOD);
+            }
+
+        }
+        OCSPResp response = Revocation.generateOCSPResponse(respBuilder, respCertificate);
+
+        return response.getEncoded();
+    }
+
+    public PublicKey getPublicKey(String alias) {       // vraca javni kljuc sertifikata
+        CertificateDTO certFromBase = getCertificate(alias);
+        java.security.cert.Certificate cert = findFromFile(alias, certFromBase.isCa());
+        return cert.getPublicKey();
     }
 }
