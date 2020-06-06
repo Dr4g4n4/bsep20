@@ -3,30 +3,23 @@ package com.example.bsep.controller;
 import com.example.bsep.certificates.CertificateReader;
 import com.example.bsep.dto.CertificateDTO;
 import com.example.bsep.dto.RevocationDetails;
-import com.example.bsep.keystores.KeyStoreWriter;
 import com.example.bsep.model.Admin;
 import com.example.bsep.model.Certificate;
 import com.example.bsep.security.TokenUtils;
 import com.example.bsep.service.AdminService;
 import com.example.bsep.service.CertificateService;
-import org.apache.tomcat.util.codec.binary.Base64;
+import com.example.bsep.validation.RegExp;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.ParameterResolutionDelegate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -119,20 +112,22 @@ public class CertificateController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/downloadCertificate/{id}")
-    public void downloadCertificate(HttpServletRequest request, HttpServletResponse response, @PathVariable Long id){
-        File certificateForDownload = certificateService.downloadCertificate(id);
-        response.setContentType("application/pkix-cert");
-        response.setContentLength((int) certificateForDownload.length());
-        response.addHeader("Content-Disposition", "attachment; filename="+ certificateForDownload.getName());
+    public void downloadCertificate(HttpServletRequest request, HttpServletResponse response, @PathVariable @Valid @Min(1) Long id){
+        RegExp reg = new RegExp();
+        if(reg.isValidId(id)){
+            File certificateForDownload = certificateService.downloadCertificate(id);
+            response.setContentType("application/pkix-cert");
+            response.setContentLength((int) certificateForDownload.length());
+            response.addHeader("Content-Disposition", "attachment; filename="+ certificateForDownload.getName());
 
-        try {
-            Files.copy(Paths.get(certificateForDownload.getPath()), response.getOutputStream() );
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                Files.copy(Paths.get(certificateForDownload.getPath()), response.getOutputStream() );
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/validate/{serialNumber}")

@@ -8,6 +8,7 @@ import com.example.bsep.dto.RevocationDetails;
 import com.example.bsep.keystores.KeyStoreReader;
 import com.example.bsep.keystores.KeyStoreWriter;
 import com.example.bsep.repository.CertificateRepository;
+import com.example.bsep.validation.RegExp;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.cert.ocsp.*;
@@ -30,6 +31,8 @@ import java.util.regex.Pattern;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.springframework.stereotype.Service;
+import org.owasp.encoder.Encode;
+
 
 @Service
 public class CertificateService {
@@ -85,8 +88,14 @@ public class CertificateService {
         // provjera datuma
 
         Certificate issuer = certificateRepository.findOneBySerialNumberSubject(certificate.getSerialNumberIssuer());
-        if(issuer!= null){
-            if(issuer.getEndDate().compareTo(certificate.getEndDate()) < 0 ){
+        if(issuer!= null) {
+            if (issuer.getEndDate().compareTo(certificate.getEndDate()) < 0) {
+                returnValue = false;
+            }
+        }
+        if(!certificate.isCa()){
+            RegExp reg = new RegExp();
+            if(!reg.isValidEmail(certificate.getEmail())){
                 returnValue = false;
             }
         }
@@ -141,10 +150,18 @@ public class CertificateService {
         return retValue;
     }
 
+    public Certificate setForHtml(Certificate certificate){
+        certificate.setCity(Encode.forHtml(certificate.getCity()));
+        certificate.setName(Encode.forHtml(certificate.getName()));
+        certificate.setSurname(Encode.forHtml(certificate.getSurname()));
+        return certificate;
+    }
+
     public boolean createSelfSignedCertificate(Certificate certificate, boolean isCa){
         certificate.setCa(isCa);
         boolean ok = validateFileds(certificate);
         if(ok){
+            certificate = setForHtml(certificate);
             Certificate cert = certificateRepository.save(certificate);
             KeyPair selfKey = getKeyPair();
             SubjectData subjectData = getSubjectData(cert,selfKey.getPublic());
