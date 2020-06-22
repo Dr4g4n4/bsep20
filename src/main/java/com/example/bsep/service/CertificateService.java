@@ -477,7 +477,7 @@ public class CertificateService {
         return response.getStatus();
     }
 
-    public PublicKey getPublicKey(String alias) {       // vraca javni kljuc sertifikata
+    public PublicKey getPublicKey(String alias) {       // vraca javni kljuc sert
         CertificateDTO certFromBase = getCertificate(alias);
         java.security.cert.Certificate cert = findFromFile(alias, certFromBase.isCa());
         return cert.getPublicKey();
