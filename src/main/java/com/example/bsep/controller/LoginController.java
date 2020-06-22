@@ -6,6 +6,7 @@ import com.example.bsep.security.TokenUtils;
 import com.example.bsep.security.auth.JwtAuthenticationRequest;
 import com.example.bsep.service.LoggingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,9 +33,6 @@ public class LoginController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    //@Autowired
-    //private main.java.com.example.bsep.service.AdminService userService;
-
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserTokenState> loginUser(@RequestBody JwtAuthenticationRequest authenticationRequest,
                                                     HttpServletResponse response) throws AuthenticationException, IOException {
@@ -44,16 +42,14 @@ public class LoginController {
             final Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(),
                             authenticationRequest.getPassword()));
-
             // Ubaci username + password u kontext
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Kreiraj token
             Admin user = (Admin) authentication.getPrincipal();
             String jwt = tokenUtils.generateToken(user.getUsername());
             int expiresIn = tokenUtils.getExpiredIn();
-
-            return ResponseEntity.ok(new UserTokenState(jwt, expiresIn));
+            com.example.bsep.model.Role r = (com.example.bsep.model.Role) user.getAuthorities().toArray()[0];
+            return ResponseEntity.ok(new UserTokenState(jwt, expiresIn, r.getName()));
         } else {
             return new ResponseEntity<UserTokenState>(HttpStatus.NOT_FOUND);
         }

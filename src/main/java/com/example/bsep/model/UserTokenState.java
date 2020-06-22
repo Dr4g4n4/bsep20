@@ -5,16 +5,18 @@ public class UserTokenState {
 
     private String accessToken;
     private long expiresIn;
+    private String role;
 
     public UserTokenState() {
         super();
         // TODO Auto-generated constructor stub
     }
 
-    public UserTokenState(String accessToken, long expiresIn) {
+    public UserTokenState(String accessToken, long expiresIn, String role) {
         super();
         this.accessToken = accessToken;
         this.expiresIn = expiresIn;
+        this.role = role;
     }
 
     public String getAccessToken() {
@@ -33,5 +35,12 @@ public class UserTokenState {
         this.expiresIn = expiresIn;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 }
 
