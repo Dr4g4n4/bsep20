@@ -46,6 +46,7 @@ public class CertificateService {
     @Autowired
     KeyStoreReader keyStoreReader;
 
+    @Autowired
     private Revocation revocation;
 
     public boolean validateFileds(Certificate certificate){

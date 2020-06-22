@@ -86,8 +86,8 @@ public class Certificate {
         this.serialNumberSubject = c.getSerialNumberSubject();
         this.serialNumberIssuer = c.getSerialNumberIssuer();
         try {
-            this.startDate = new SimpleDateFormat("yyyy/MM/dd hh:hh").parse(c.getStartDate());
-            this.endDate = new SimpleDateFormat("yyyy/MM/dd hh:hh").parse(c.getEndDate());
+            this.startDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.S").parse(c.getStartDate());
+            this.endDate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.S").parse(c.getEndDate());
         } catch (ParseException e) {
             e.printStackTrace();
         }

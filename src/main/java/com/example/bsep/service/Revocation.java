@@ -14,6 +14,8 @@ import org.bouncycastle.cert.ocsp.*;
 import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -26,8 +28,10 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
+@Service
 public class Revocation {
 
+    @Autowired
     private KeyStoreReader keyStoreReader;
 
     public int getCodeFormString(String revocationReason) {

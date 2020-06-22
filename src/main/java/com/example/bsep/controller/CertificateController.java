@@ -12,6 +12,7 @@ import com.example.bsep.validation.RegExp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,24 +40,20 @@ public class CertificateController {
     @Autowired
     private TokenUtils tokenUtils;
 
+    @PreAuthorize("hasAuthority('READ_CERTS')")
     @RequestMapping(method=RequestMethod.GET, value = "/getAllCertificates")
     public ResponseEntity<List<CertificateDTO>> getAllCerts() {
 
-        // HttpServletRequest request
-        // String token = tokenUtils.getToken(request);
-        // String email = tokenUtils.getUsernameFromToken(token);
-        // User user = userService.findOneByEmail(email);
-        // if (user != null) {
-            List<CertificateDTO>retValue = certificateService.getAllCertificates();
-            if (retValue.size() > 0) {
-                return new ResponseEntity<>(retValue, HttpStatus.OK);
-            }
-       // }
+        List<CertificateDTO>retValue = certificateService.getAllCertificates();
+        if (retValue.size() > 0) {
+            return new ResponseEntity<>(retValue, HttpStatus.OK);
+        }
+
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
 
-
+    @PreAuthorize("hasAuthority('READ_CERTS')")
     @GetMapping(value = "/getAllCaCertificates")
     public ResponseEntity<List<CertificateDTO>> getAllCaCerts() {
 
@@ -68,6 +65,7 @@ public class CertificateController {
             return new ResponseEntity<>(retValue, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('READ_CERTS')")
     @GetMapping(value = "/getAllNonCaCertificates")
     public ResponseEntity<List<CertificateDTO>> getAllNonCaCerts() {
 
@@ -83,6 +81,7 @@ public class CertificateController {
        // return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     //}
 
+    @PreAuthorize("hasAuthority('WRITE_CERTS')")
     @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createSelf/{isCa}")
     public ResponseEntity<ResponseEntity>  createCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
         System.out.print("Kontroler da li je CA:   " + isCa);
@@ -95,6 +94,7 @@ public class CertificateController {
         }
     }
 
+    @PreAuthorize("hasAuthority('WRITE_CERTS')")
     @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createNoSelf/{isCa}")
     public ResponseEntity<ResponseEntity> createNoCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
         boolean retValue = certificateService.createNonSelfSignedCertificate(certificate, isCa);
@@ -106,11 +106,13 @@ public class CertificateController {
         }
     }
 
+    @PreAuthorize("hasAuthority('READ_CERTS')")
     @RequestMapping(method = RequestMethod.GET, value = "/{serialNumber}")
     public CertificateDTO getCertificate(@PathVariable String serialNumber){
         return certificateService.getCertificate(serialNumber);
     }
 
+    @PreAuthorize("hasAuthority('DOWNLOAD')")
     @RequestMapping(method = RequestMethod.GET, value = "/downloadCertificate/{id}")
     public void downloadCertificate(HttpServletRequest request, HttpServletResponse response, @PathVariable @Valid @Min(1) Long id){
         RegExp reg = new RegExp();
@@ -130,12 +132,14 @@ public class CertificateController {
         }
     }
 
+    @PreAuthorize("hasAuthority('EDIT_CERTS')")
     @RequestMapping(method = RequestMethod.GET, value = "/validate/{serialNumber}")
     public ResponseEntity<Boolean> validateCertificate(@PathVariable String serialNumber){
         boolean ret = certificateService.isValid(serialNumber);
         return new ResponseEntity<>(ret, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('EDIT_CERTS')")
     @RequestMapping(method = RequestMethod.POST, consumes="application/json", value = "/revokeCertificate")
     public ResponseEntity<ResponseEntity> revokeCertificate(@RequestBody RevocationDetails details, HttpServletRequest request){
         String token = tokenUtils.getToken(request);
@@ -155,6 +159,7 @@ public class CertificateController {
         }
     }
 
+    @PreAuthorize("hasAuthority('READ_CERTS')")
     @RequestMapping(method = RequestMethod.GET, produces="application/json", value = "/getRevoked")
     public List<Certificate> revokedCertificates(HttpServletResponse response){
         ArrayList<Certificate> revoked = (ArrayList<Certificate>) certificateService.revokedCertificates(true);
@@ -167,6 +172,7 @@ public class CertificateController {
         return revoked;
     }
 
+    @PreAuthorize("hasAuthority('READ_CERTS')")
     @RequestMapping(value = "/ocsp/{alias}", method = RequestMethod.GET, produces = "application/ocsp-response")
     @ResponseBody
     public ResponseEntity<?> getOCSP(HttpServletRequest request, @PathVariable String alias) {
