@@ -456,17 +456,18 @@ public class CertificateService {
         Req[] requests = ocspreq.getRequestList();
         java.security.cert.Certificate respCertificate = null;
         for (Req req : requests) {
-            Certificate cert = new Certificate(getCertificate(certAlias));
+            Certificate cert = certificateRepository.findOneBySerialNumberSubject(certAlias);
             respCertificate = findFromFile(certAlias, cert.isCa());
             if (cert == null) {
                 respBuilder.addResponse(req.getCertID(), new UnknownStatus());
             } else if (!isRevoked(certAlias)) {  // Check if certificate has been revoked
                 try {
-                    Date revokedDate = new SimpleDateFormat("dd/MM/yyyy hh:mm").parse(cert.getRevocationTimestamp());
+                    Date revokedDate = new SimpleDateFormat("dd/MM/yyyy, hh:mm:ss a", Locale.US).parse(cert.getRevocationTimestamp());
                     respBuilder.addResponse(req.getCertID(), new RevokedStatus(revokedDate , revocation.getCodeFormString(cert.getRevocationReason())));
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
+                break;
             } else {
                 respBuilder.addResponse(req.getCertID(), CertificateStatus.GOOD);
             }

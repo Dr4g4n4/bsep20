@@ -97,6 +97,7 @@ public class Certificate {
         this.name = c.getName();
         this.surname = c.getSurname();
         this.email = c.getEmail();
+        //this.revocationReason = c.getre
     }
 
     public String getSerialNumberSubject(){

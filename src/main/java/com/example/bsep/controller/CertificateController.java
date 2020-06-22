@@ -173,9 +173,8 @@ public class CertificateController {
     }
 
     @PreAuthorize("hasAuthority('READ_CERTS')")
-    @RequestMapping(value = "/ocsp/{alias}", method = RequestMethod.GET, produces = "application/ocsp-response")
-    @ResponseBody
-    public ResponseEntity<?> getOCSP(HttpServletRequest request, @PathVariable String alias) {
+    @RequestMapping(value = "/ocsp/{alias}", method = RequestMethod.GET)
+    public ResponseEntity<Integer> getOCSP(HttpServletRequest request, @PathVariable String alias) {
         String token = tokenUtils.getToken(request);
         String username = tokenUtils.getUsernameFromToken(token);
         Admin user = adminService.findOneByUserName(username);

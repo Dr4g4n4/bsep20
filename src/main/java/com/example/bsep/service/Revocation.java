@@ -120,6 +120,12 @@ public class Revocation {
             BasicOCSPResp basicResp = respBuilder.build(contentSigner,
                     new X509CertificateHolder[] { new X509CertificateHolder(signingCert.getEncoded()) }, new Date());
             int response = OCSPRespBuilder.SUCCESSFUL;
+           CertificateStatus response1 = basicResp.getResponses()[0].getCertStatus();
+            if (CertificateStatus.GOOD != response1) {
+                response = 1;   // povucen je
+            }
+            OCSPResp ocsp = new OCSPRespBuilder().build(response, basicResp);
+
             return new OCSPRespBuilder().build(response, basicResp);        // salje povuceni sert u responsu
         } catch (Exception e) {
             return null;
