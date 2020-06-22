@@ -1,19 +1,16 @@
 package com.example.bsep.model;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import org.springframework.security.core.GrantedAuthority;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.Set;
+
 @Entity
 @Table(name = "AUTHORITY")
-public class Authority implements GrantedAuthority {
+public class Role implements GrantedAuthority {
 
     private static final long serialVersionUID = 1L;
 
@@ -23,7 +20,15 @@ public class Authority implements GrantedAuthority {
     Long id;
 
     @Column(name = "name")
-    String name;
+    String name;        // role
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "roles_privileges", joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "privilege_id", referencedColumnName = "id"))
+    private Set<Privilege> privileges;
+
+    @ManyToMany(mappedBy = "authorities" , fetch = FetchType.LAZY)
+    private Set<Admin> users;
 
     @Override
     public String getAuthority() {
@@ -48,5 +53,13 @@ public class Authority implements GrantedAuthority {
         this.id = id;
     }
 
+    public Set<Privilege> getPrivileges() {
+        return this.privileges;
+    }
+
+
+    public void setPrivileges(Set<Privilege> privileges) {
+        this.privileges = privileges;
+    }
 }
 

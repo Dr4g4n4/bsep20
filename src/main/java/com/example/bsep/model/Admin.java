@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class Admin implements UserDetails {
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(name = "user_authority", joinColumns = @JoinColumn(name = "admin_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "authority_id", referencedColumnName = "id"))
-    private List<Authority> authorities;
+    private List<Role> authorities;
 
     @Column(name = "last_password_reset_date", nullable = true)
     private Timestamp lastPasswordResetDate;
@@ -79,7 +80,12 @@ public class Admin implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.authorities;
+        List<GrantedAuthority> permissions = new ArrayList<GrantedAuthority>(20);
+        for (Role role : this.authorities) {
+            permissions.addAll(role.getPrivileges());
+        }
+        permissions.addAll(this.authorities);
+        return permissions;
     }
 
     @Override
@@ -112,7 +118,7 @@ public class Admin implements UserDetails {
         return enabled;
     }
 
-    public void setAuthorities(List<Authority> authorities) {
+    public void setAuthorities(List<Role> authorities) {
         this.authorities = authorities;
     }
 

@@ -2,21 +2,27 @@ package com.example.bsep.service;
 
 
 import com.example.bsep.keystores.KeyStoreReader;
+import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.cert.ocsp.*;
-import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 
+import java.io.IOException;
+import java.math.BigInteger;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
@@ -74,6 +80,31 @@ public class Revocation {
             respBuilder.setResponseExtensions(new Extensions(new Extension[] { ext })); // Put the nonce back in the response
         }
         return respBuilder;
+    }
+
+    public static OCSPReq generateOCSPRequest(X509Certificate genCert, BigInteger serialNumber)  {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        OCSPReqBuilder gen = new OCSPReqBuilder();
+        JcaDigestCalculatorProviderBuilder digestCalculatorProviderBuilder = new JcaDigestCalculatorProviderBuilder();
+        DigestCalculatorProvider digestCalculatorProvider = null;
+        try {
+            digestCalculatorProvider = digestCalculatorProviderBuilder.build();
+            DigestCalculator digestCalculator = digestCalculatorProvider.get(CertificateID.HASH_SHA1);
+            CertificateID id = new CertificateID(digestCalculator, new JcaX509CertificateHolder(genCert), serialNumber);
+            gen.addRequest(id);
+            BigInteger nonce = BigInteger.valueOf(System.currentTimeMillis());
+            Extension ext = new Extension(OCSPObjectIdentifiers.id_pkix_ocsp_nonce, true, new DEROctetString(nonce.toByteArray()));
+            gen.setRequestExtensions(new Extensions(new Extension[]{ext}));
+            return gen.build();
+        } catch (OperatorCreationException e) {
+            e.printStackTrace();
+        } catch (CertificateEncodingException e) {
+            e.printStackTrace();
+        } catch (OCSPException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public OCSPResp generateOCSPResponse(BasicOCSPRespBuilder respBuilder, Certificate signingCert) {
