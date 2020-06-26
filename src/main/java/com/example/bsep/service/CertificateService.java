@@ -13,6 +13,7 @@ import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.cert.ocsp.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 import com.example.bsep.model.Certificate;
@@ -48,6 +49,9 @@ public class CertificateService {
 
     @Autowired
     private Revocation revocation;
+
+    @Autowired
+    private Environment env;
 
     public boolean validateFileds(Certificate certificate){
         boolean returnValue = true;
@@ -159,6 +163,7 @@ public class CertificateService {
     }
 
     public boolean createSelfSignedCertificate(Certificate certificate, boolean isCa){
+        String keyStorePass = env.getProperty("spring.keystore.keyStorePass");
         certificate.setCa(isCa);
         boolean ok = validateFileds(certificate);
         if(ok){
@@ -180,9 +185,9 @@ public class CertificateService {
 
             String keyStoreFile = "ks/ksCA.jks";
             KeyStoreWriter kw = new KeyStoreWriter();
-            kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
-            kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), "sifra1".toCharArray(), new java.security.cert.Certificate[]{certX509});
-            kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
+            kw.loadKeyStore(keyStoreFile, keyStorePass.toCharArray());
+            kw.write(subjectData.getSerialNumber(), selfKey.getPrivate(), keyStorePass.toCharArray(), new java.security.cert.Certificate[]{certX509});
+            kw.saveKeyStore(keyStoreFile, keyStorePass.toCharArray());
             return true;
         }
         else{
@@ -196,8 +201,9 @@ public class CertificateService {
         boolean ok = validateFileds(certificate);
         if(ok){
             Certificate newCertificate = certificateRepository.save(certificate);
+            String keyStorePass = env.getProperty("spring.keystore.keyStorePass");
             // ucitava se privatni kljuc sertifikata koji izdaje neki drugi sertifikat
-            IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", certificate.getSerialNumberIssuer(), "sifra1".toCharArray(), "sifra1".toCharArray());
+            IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", certificate.getSerialNumberIssuer(), keyStorePass.toCharArray(), keyStorePass.toCharArray());
             KeyPair subjectKey = getKeyPair();
             SubjectData subjectData = getSubjectData(newCertificate,subjectKey.getPublic());
             CertificateGenerator certGenerator = new CertificateGenerator();
@@ -213,8 +219,8 @@ public class CertificateService {
 
             KeyStoreWriter kw = new KeyStoreWriter();
             java.security.cert.Certificate[] chain = addToChain(keyStoreFile, isCa, kw, certificate.getSerialNumberIssuer(), certX509);
-            kw.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), "sifra1".toCharArray(), chain);
-            kw.saveKeyStore(keyStoreFile, "sifra1".toCharArray());
+            kw.write(subjectData.getSerialNumber(), subjectKey.getPrivate(), keyStorePass.toCharArray(), chain);
+            kw.saveKeyStore(keyStoreFile, keyStorePass.toCharArray());
             return true;
         }
         else{
@@ -223,8 +229,9 @@ public class CertificateService {
     }
 
     private java.security.cert.Certificate[] addToChain(String keyStoreFile, boolean isCA, KeyStoreWriter kw, String serialNumber, X509Certificate newCert){
+        String keyStorePass = env.getProperty("spring.keystore.keyStorePass");
         java.security.cert.Certificate[] ret = new java.security.cert.Certificate[1];
-        kw.loadKeyStore(keyStoreFile, "sifra1".toCharArray());
+        kw.loadKeyStore(keyStoreFile, keyStorePass.toCharArray());
         if (isCA) {
             java.security.cert.Certificate[] chain = kw.getChain(serialNumber);     // issuer's chain
             ArrayList<java.security.cert.Certificate> convertedArray = new ArrayList<java.security.cert.Certificate>(Arrays.asList(chain));
@@ -291,8 +298,9 @@ public class CertificateService {
     }
 
     private java.security.cert.Certificate findFromFile(String serialNumber, boolean isCA) {
+        String keyStorePass = env.getProperty("spring.keystore.keyStorePass");
         String keyStoreFile = isCA ? "ks/ksCA.jks" : "ks/nonCA_KS.jks" ;
-        return keyStoreReader.readCertificate(keyStoreFile, "sifra1", serialNumber);
+        return keyStoreReader.readCertificate(keyStoreFile, keyStorePass, serialNumber);
     }
 
     private File writeCertificate(java.security.cert.Certificate cert) {
@@ -330,10 +338,10 @@ public class CertificateService {
     }
     public boolean revokeCertificate(RevocationDetails details) {
           Certificate baseCertificate = revokeOne(details.getSerialNumberSubject(), details);     // ako nije ca, ovde je zavrsen posao
-
+        String keyStorePass = env.getProperty("spring.keystore.keyStorePass");
         if (baseCertificate.isCa()) {       // ucitati sve i povuci sve ispod ovog
             ArrayList<java.security.cert.Certificate> allCACertificates = revokeTheOnesBelow(baseCertificate.getSerialNumberSubject(), "ks/ksCA.jks");
-            ArrayList<java.security.cert.Certificate> allEECertificates = keyStoreReader.readAllCertificates("ks/nonCA_KS.jks", "sifra1");
+            ArrayList<java.security.cert.Certificate> allEECertificates = keyStoreReader.readAllCertificates("ks/nonCA_KS.jks", keyStorePass);
 
             for (java.security.cert.Certificate ee : allEECertificates) {   // povlacenje malih
                 for ( java.security.cert.Certificate ca :  allCACertificates) {
@@ -363,11 +371,12 @@ public class CertificateService {
 
     private ArrayList<java.security.cert.Certificate> revokeTheOnesBelow(String serialNumber, String keystoreFile) {
         KeyStore ks = null;
+        String keyStorePass = env.getProperty("spring.keystore.keyStorePass");
         ArrayList<java.security.cert.Certificate> certs = new ArrayList<>(50);
         try {
             ks = KeyStore.getInstance("JKS", "SUN");
             BufferedInputStream in = new BufferedInputStream(new FileInputStream(Paths.get(ResourceUtils.getFile("classpath:")+"\\..\\..\\src\\main\\resources").toRealPath().toString() + "\\" + keystoreFile));
-            ks.load(in, "sifra1".toCharArray());
+            ks.load(in, keyStorePass.toCharArray());
             Enumeration<String> es = ks.aliases();
             String alias = "";
             while (es.hasMoreElements()) {
@@ -435,7 +444,8 @@ public class CertificateService {
     public boolean isRevoked(String alias) {
         CertificateDTO cert;
         String keyStoreFile = keyStoreFileHelper(alias);
-        ArrayList<java.security.cert.Certificate> certsToCheck = keyStoreReader.readCertificateChain(keyStoreFile, "sifra1", alias);
+        String keyStorePass = env.getProperty("spring.keystore.keyStorePass");
+        ArrayList<java.security.cert.Certificate> certsToCheck = keyStoreReader.readCertificateChain(keyStoreFile, keyStorePass, alias);
 
         for (java.security.cert.Certificate c : certsToCheck) {
             cert = getCertificate(((X509Certificate)c).getSerialNumber().toString());
