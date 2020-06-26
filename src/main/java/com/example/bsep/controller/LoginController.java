@@ -44,7 +44,6 @@ public class LoginController {
                             authenticationRequest.getPassword()));
             // Ubaci username + password u kontext
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
             Admin user = (Admin) authentication.getPrincipal();
             String jwt = tokenUtils.generateToken(user.getUsername());
             int expiresIn = tokenUtils.getExpiredIn();
