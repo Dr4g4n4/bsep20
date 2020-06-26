@@ -78,6 +78,10 @@ public class Admin implements UserDetails {
         this.firstLogin = firstLogin;
     }
 
+    /**
+     * sve role i permisije
+     * @return
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> permissions = new ArrayList<GrantedAuthority>(20);
@@ -124,5 +128,9 @@ public class Admin implements UserDetails {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public List<Role> getRoles() {
+        return this.authorities;
     }
 }

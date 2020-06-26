@@ -48,7 +48,7 @@ public class LoginController {
             Admin user = (Admin) authentication.getPrincipal();
             String jwt = tokenUtils.generateToken(user.getUsername());
             int expiresIn = tokenUtils.getExpiredIn();
-            com.example.bsep.model.Role r = (com.example.bsep.model.Role) user.getAuthorities().toArray()[0];
+            com.example.bsep.model.Role r = (com.example.bsep.model.Role) user.getRoles().toArray()[0];
             return ResponseEntity.ok(new UserTokenState(jwt, expiresIn, r.getName()));
         } else {
             return new ResponseEntity<UserTokenState>(HttpStatus.NOT_FOUND);
