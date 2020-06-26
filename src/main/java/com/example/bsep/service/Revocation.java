@@ -15,6 +15,7 @@ import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -33,6 +34,9 @@ public class Revocation {
 
     @Autowired
     private KeyStoreReader keyStoreReader;
+
+    @Autowired
+    private Environment env;
 
     public int getCodeFormString(String revocationReason) {
         int reason = 0;
@@ -113,8 +117,9 @@ public class Revocation {
 
     public OCSPResp generateOCSPResponse(BasicOCSPRespBuilder respBuilder, Certificate signingCert) {
         //String keyStoreFile = ((X509Certificate)signingCert). isCA iz ekstenzije izvuci
-        PrivateKey privateKey = keyStoreReader.readPrivateKey("ks/ksCA.jks", "sifra1",
-                ((X509Certificate)signingCert).getSerialNumber().toString(), "sifra1");
+        String keyStorePass = env.getProperty("spring.keystore.keyStorePass");
+        PrivateKey privateKey = keyStoreReader.readPrivateKey("ks/ksCA.jks", keyStorePass,
+                ((X509Certificate)signingCert).getSerialNumber().toString(), keyStorePass);
         try {
             ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256WithRSAEncryption").setProvider("BC").build(privateKey);
             BasicOCSPResp basicResp = respBuilder.build(contentSigner,
