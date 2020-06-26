@@ -21,6 +21,7 @@ import javax.validation.constraints.Min;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.cert.CertificateParsingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,7 +97,7 @@ public class CertificateController {
 
     @PreAuthorize("hasAuthority('WRITE_CERTS')")
     @RequestMapping(method= RequestMethod.POST, consumes="application/json", value = "/createNoSelf/{isCa}")
-    public ResponseEntity<ResponseEntity> createNoCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa){
+    public ResponseEntity<ResponseEntity> createNoCACertificate(@RequestBody Certificate certificate, @PathVariable boolean isCa) throws CertificateParsingException {
         boolean retValue = certificateService.createNonSelfSignedCertificate(certificate, isCa);
         if(retValue){
             return new ResponseEntity<>(HttpStatus.OK);

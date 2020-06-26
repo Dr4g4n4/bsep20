@@ -181,7 +181,7 @@ public class CertificateService {
 
             IssuerData issuerData = new IssuerData(selfKey.getPrivate(), builder.build());
             CertificateGenerator certGenerator = new CertificateGenerator();
-            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData,certificate.getKeyUsage(),certificate.getExtendedKeyUsage(),true);
+            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData,certificate.getKeyUsage(),certificate.getExtendedKeyUsage(),true,null);
 
             String keyStoreFile = "ks/ksCA.jks";
             KeyStoreWriter kw = new KeyStoreWriter();
@@ -196,7 +196,7 @@ public class CertificateService {
 
     }
 
-    public boolean createNonSelfSignedCertificate(Certificate certificate, boolean isCa){
+    public boolean createNonSelfSignedCertificate(Certificate certificate, boolean isCa) throws CertificateParsingException {
         certificate.setCa(isCa);
         boolean ok = validateFileds(certificate);
         if(ok){
@@ -206,8 +206,12 @@ public class CertificateService {
             IssuerData issuerData = keyStoreReader.readIssuerFromStore("ks/ksCA.jks", certificate.getSerialNumberIssuer(), keyStorePass.toCharArray(), keyStorePass.toCharArray());
             KeyPair subjectKey = getKeyPair();
             SubjectData subjectData = getSubjectData(newCertificate,subjectKey.getPublic());
+            //parentCert
+            java.security.cert.Certificate parCert = findFromFile(certificate.getSerialNumberIssuer(),isCa);
+            X509Certificate parentCert = (X509Certificate)parCert;
+
             CertificateGenerator certGenerator = new CertificateGenerator();
-            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData,certificate.getKeyUsage(),certificate.getExtendedKeyUsage(),false);
+            X509Certificate certX509 = certGenerator.generateCertificate(subjectData, issuerData,certificate.getKeyUsage(),certificate.getExtendedKeyUsage(),false,parentCert);
             String keyStoreFile = "";
 
             if(certificate.isCa()) {
